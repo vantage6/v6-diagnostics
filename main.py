@@ -92,9 +92,10 @@ except Exception as e:
 # --> check that we cannot reach another address
 print('--> Verify that the container has no internet connection')
 try:
-    response = requests.get('https://google.nl')
-    ok = response.status_code != 200
-    test_results['ISOLATION_TEST'] = {'Success': ok}
+    try:
+        response = requests.get('https://google.nl')
+    except ConnectionError:
+        test_results['ISOLATION_TEST'] = {'Success': ok}
 except Exception as e:
     print('--> Testing an external connection failed...')
     test_results['ISOLATION_TEST'] = {'Success': False, 'Exception': e}
