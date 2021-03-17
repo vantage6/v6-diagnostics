@@ -1,50 +1,102 @@
-
-# --> Check environment variables
-# The environment is set by the node and can be extended by using
-# the `algorithm_envs` key in the configuration file of the node.
 import os
-print(os.environ)
+import requests
 
-# --> Check that we can read the input, output and token file
-with open(os.environ['INPUT_FILE'], 'r') as f:
-    print('--> Reading input file')
-    print(f'INPUT FILE: {f.read()}')
+from pathlib import Path
 
-with open(os.environ['OUTPUT_FILE'], 'w') as f:
-    print('--> Writing to output file (contents: test)')
-    f.write('test')
 
-with open(os.environ['OUTPUT_FILE'], 'r') as f:
-    print('--> Reading output file back and check')
-    print(f.read())
+test_results = {}
 
-with open(os.environ['TOKEN_FILE'], 'r') as f:
-    print('--> Reading token file')
-    print(f'TOKEN: {f.read()}')
+#
+#   CHECK ENVIRONMENT VARIALBES
+#
+print('--> Reading the environment variables')
+print(f'ENVIRONMENT: {os.environ}')
+test_results['environment'] = os.environ
 
-# --> Check that we can write to the temporary volume
-temp_file = f'{os.environ["TEMPORARY_FOLDER"]}/test.txt'
-with open(temp_file, 'w') as f:
-    print(f'--> Writing to temporary file: {temp_file}')
-    f.write('test')
+#
+#   CHECK INPUT_FILE
+#
+try:
+    with open(os.environ['INPUT_FILE'], 'r') as f:
+        print('--> Reading input file')
+        print(f'INPUT FILE: {f.read()}')
+    test_results['READ_INPUT_FILE'] = {'Success': True}
+except Exception as e:
+    print('--> Reading input file failed')
+    test_results['READ_INPUT_FILE'] = {'Success': False, 'Exception': e}
+
+#
+#   CHECK OUTPUT FILE
+#
+try:
+
+    with open(os.environ['OUTPUT_FILE'], 'w') as f:
+        print('--> Writing to output file (contents: test)')
+        f.write('test')
+
+    with open(os.environ['OUTPUT_FILE'], 'r') as f:
+        print('--> Reading output file back and check')
+        print(f.read())
+
+    test_results['WRITE_READ_OUTPUT_FILE'] = {'Success': True}
+except Exception as e:
+    print('--> Reading or Writing output file failed')
+    test_results['WRITE_READ_OUTPUT_FILE'] = {'Success': False, 'Exception': e}
+
+#
+#   CHECK TOKEN FILE
+#
+try:
+    with open(os.environ['TOKEN_FILE'], 'r') as f:
+        print('--> Reading token file')
+        print(f'TOKEN: {f.read()}')
+    test_results['READ_TOKEN_FILE'] = {'Success': True}
+except Exception as e:
+    print('--> Reading token file failed')
+    test_results['READ_TOKEN_FILE'] = {'Success': False, 'Exception': e}
+
+#
+#   CHECK TEMPORARY VOLUME
+#
+print('--> Test temporary volume')
+try:
+    temp_file = f'{os.environ["TEMPORARY_FOLDER"]}/test.txt'
+    with open(temp_file, 'w') as f:
+        print(f'--> Writing to temporary file: {temp_file}')
+        f.write('test')
+    test_results['TEMPORARY_VOLUME'] = {'Success': True}
+except Exception as e:
+    print('--> Writing to temporary folder failed')
+    test_results['TEMPORARY_VOLUME'] = {'Success': False, 'Exception': e}
 
 print('--> Test that the temporary file is created')
-from pathlib import Path
-file_exists = Path(temp_file).exists()
-print(f'FILE CREATED: {file_exists}')
+try:
+    file_exists = Path(temp_file).exists()
+    print(f'FILE CREATED: {file_exists}')
+    test_results['TEMPORARY_VOLUME_FILE_EXISTS'] = {'Success': file_exists}
+except Exception as e:
+    test_results['TEMPORARY_VOLUME_FILE_EXISTS'] = {'Success': False, 'Exception': e}
 
 # --> Check that we can reach the local proxy
 print('--> Test that we can reach the local proxy (and thereby the server)')
-import requests
-host = os.environ['HOST']
-port = os.environ['PORT']
-requests.get(f'{host}:{port}/version')
+try:
+    host = os.environ['HOST']
+    port = os.environ['PORT']
+    response = requests.get(f'{host}:{port}/version')
+    ok = response.status_code == 200
+    test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {'Success': ok}
+except Exception as e:
+    print('--> Using the local proxy failed')
+    test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {'Success': False, 'Exception': e}
 
 # --> check that we cannot reach another address
 print('--> Verify that the container has no internet connection')
-response = requests.get('https://google.nl')
-passed = response.status_code != 200
-print(f'ISOLATED: {passed}')
+try:
+    response = requests.get('https://google.nl')
+    ok = response.status_code != 200
+    test_results['ISOLATION_TEST'] = {'Success': ok}
+except Exception as e:
+    print('--> Testing an external connection failed...')
+    test_results['ISOLATION_TEST'] = {'Success': False, 'Exception': e}
 
-# --> Check if you can reach services in the network.
-import requests
+print(test_results)

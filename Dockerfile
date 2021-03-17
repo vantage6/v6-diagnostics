@@ -7,7 +7,6 @@ ARG PKG_NAME="v6-feature-tester-py"
 
 # install federated algorithm
 COPY . /app
-RUN pip install /app
 
 ENV PKG_NAME=${PKG_NAME}
 
