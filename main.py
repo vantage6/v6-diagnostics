@@ -100,7 +100,7 @@ try:
         response = requests.get('https://google.nl')
     except ConnectionError as e:
         print('--> Connection error catched')
-        print(e)
+        # print(e)
         test_results['ISOLATION_TEST'] = {'Success': ok}
 except Exception as e:
     print('x-> Testing an external connection failed...')
@@ -113,27 +113,31 @@ print('--> Check that two ports have been published')
 if test_results['READ_TOKEN_FILE']['Success']:
     try:
         # obtain own task id
-        id_ = jwt.decode(token, verify=False)['identity'].get('task_id')
+        id_ = (jwt.decode(token, verify=False)['identity']).get('task_id')
 
         # port should be published as we are running this code.. So no
         # need for polling
-        response = requests.get(f'{host}:{port}/task/{id_}/result')
+        response = requests.get(f'{host}:{port}/task/{id_}/result', headers={
+            'Authorization': 'Bearer ' + token
+        })
 
         # we also assume that only a single task has been posted as we
         # are not testing the connectivity between nodes yet
         p5 = p8 = False
         pU = True
-        result = response[0]
+        result = response.json()[0]
+        print('debug')
+        print(result)
         print(f'--> Found {len(result["ports"])} port(s)')
         for port in result['ports']:
             if port['label'] =='port5':
-                print('--> found \'port5\'')
+                print(f'--> found \'port5\':{port["port"]}')
                 p5 = True
             elif port['label'] =='port8':
-                print('--> found \'port8\'')
+                print(f'--> found \'port8\':{port["port"]}')
                 p8 = True
             else:
-                print('--> Found unexpected port!')
+                print('--> Found an unexpected port!')
                 pU = False
 
         test_results['EXTERNAL_PORT_TEST'] = {'Success': all([p5, p8, pU])}
