@@ -1,5 +1,6 @@
 import os
 import requests
+import jwt
 
 from pathlib import Path
 
@@ -49,7 +50,9 @@ except Exception as e:
 try:
     with open(os.environ['TOKEN_FILE'], 'r') as f:
         print('--> Reading token file')
-        print(f'TOKEN: {f.read()}')
+        token = f.read()
+        print(f'TOKEN: {token}')
+
     test_results['READ_TOKEN_FILE'] = {'Success': True}
 except Exception as e:
     print('--> Reading token file failed')
@@ -99,5 +102,41 @@ try:
 except Exception as e:
     print('--> Testing an external connection failed...')
     test_results['ISOLATION_TEST'] = {'Success': False, 'Exception': e}
+
+#
+# External port test
+#
+print('--> Check that two ports have been published')
+if test_results['READ_TOKEN_FILE']['Success']:
+    try:
+        # obtain own task id
+        id_ = jwt.decode(token, verify=False)['identity'].get('task_id')
+
+        # port should be published as we are running this code.. So no
+        # need for polling
+        response = requests.get(f'{host}:{port}/task/{id_}/result')
+
+        # we also assume that only a single task has been posted as we
+        # are not testing the connectivity between nodes yet
+        p5 = p8 = False
+        pU = True
+        result = response[0]
+        print(f'--> Found {len(result["ports"])} port(s)')
+        for port in result['ports']:
+            if port['label'] =='port5':
+                print('--> found \'port5\'')
+                p5 = True
+            elif port['label'] =='port8':
+                print('--> found \'port8\'')
+                p8 = True
+            else:
+                print('--> Found unexpected port!')
+                pU = False
+
+        test_results['EXTERNAL_PORT_TEST'] = {'Success': all([p5, p8, pU])}
+
+    except Exception as e:
+        print('--> external port check failed')
+        test_results['EXTERNAL_PORT_TEST'] = {'Success': False, 'Exception': e}
 
 print(test_results)
