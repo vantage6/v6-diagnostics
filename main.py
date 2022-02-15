@@ -146,4 +146,15 @@ if test_results['READ_TOKEN_FILE']['Success']:
         print('--> external port check failed')
         test_results['EXTERNAL_PORT_TEST'] = {'Success': False, 'Exception': e}
 
+# Only works for file based databases
+print('--> Check attached databases exists')
+for key in os.environ:
+    if key.endswith('_DATABASE_URI'):
+        print(f'--> Found database-path: {key}')
+        path_ = os.environ[key]
+        if Path(path_).exists():
+            print(f'--> database \'{key}\' is reachable: {path_}')
+        else:
+            print(f'--> database \'{key}\' is *not* reachable: {path_}')
+
 print(test_results)
