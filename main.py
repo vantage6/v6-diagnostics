@@ -113,7 +113,8 @@ print('--> Check that two ports have been published')
 if test_results['READ_TOKEN_FILE']['Success']:
     try:
         # obtain own task id
-        id_ = (jwt.decode(token, verify=False)['sub']).get('task_id')
+        id_ = (jwt.decode(token, options={"verify_signature": False})['sub'])\
+            .get('task_id')
 
         # port should be published as we are running this code.. So no
         # need for polling
