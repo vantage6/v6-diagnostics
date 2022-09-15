@@ -1,5 +1,6 @@
 all:
-	make build & make publish
+	make build
+	make publish
 
 build:
 	docker build -t harbor2.vantage6.ai/infrastructure/hello-vantage6 .

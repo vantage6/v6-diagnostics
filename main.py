@@ -1,6 +1,8 @@
 import os
 import requests
 import jwt
+import base64
+import pickle
 
 from pathlib import Path
 from requests.exceptions import ConnectionError
@@ -20,11 +22,17 @@ test_results['environment'] = os.environ
 try:
     with open(os.environ['INPUT_FILE'], 'rb') as f:
         print('--> Reading input file')
-        print(f'INPUT FILE: {f.read()}')
+        input_ = f.read()
+        print(f'INPUT FILE: {input_}')
     test_results['READ_INPUT_FILE'] = {'Success': True}
 except Exception as e:
     print('x-> Reading input file failed')
     test_results['READ_INPUT_FILE'] = {'Success': False, 'Exception': e}
+
+killmsg = 'stop'
+if pickle.loads(input_) == killmsg:
+    print('--> This is a subtask from the feature tester. Exiting.')
+    exit(0)
 
 #
 #   CHECK OUTPUT FILE
@@ -92,6 +100,37 @@ try:
 except Exception as e:
     print('x-> Using the local proxy failed')
     test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {'Success': False, 'Exception': e}
+
+print('--> Test that we can create a subtask')
+print('    Depending on the collaboration this test the encryption module')
+try:
+    host = os.environ['HOST']
+    port = os.environ['PORT']
+
+    # obtain collaboration id which is stored in the token
+    identity = (jwt.decode(token, options={"verify_signature": False})['sub'])
+
+    response = requests.post(
+        f'{host}:{port}/task',
+        json={
+            'name': 'feature-tester-subtask',
+            'description': 'This task is initiated from the feature tester',
+            'image': identity.get('image'),
+            'collaboration_id': identity.get('collaboration_id'),
+            'organizations': [{
+                'id': identity.get('organization_id'),
+                'input': base64.b64encode(pickle.dumps(killmsg)).decode('utf-8') # do not run any tests
+            }],
+            'database': 'default'
+        },
+        headers={'Authorization': f'Bearer {token}'}
+    )
+
+    test_results['CREATE_SUB_TASK'] = response.json()
+
+except Exception as e:
+    print('x-> Using the local proxy to create a task failed')
+    test_results['CREATE_SUB_TASK'] = {'Success': False, 'Exception': e}
 
 # --> check that we cannot reach another address
 print('--> Verify that the container has no internet connection')
