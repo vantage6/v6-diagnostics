@@ -87,7 +87,9 @@ try:
     test_results['TEMPORARY_VOLUME_FILE_EXISTS'] = {'Success': file_exists}
 except Exception as e:
     print('x-> Test temporary volume failed')
-    test_results['TEMPORARY_VOLUME_FILE_EXISTS'] = {'Success': False, 'Exception': e}
+    test_results['TEMPORARY_VOLUME_FILE_EXISTS'] = {
+        'Success': False, 'Exception': e
+    }
 
 # --> Check that we can reach the local proxy
 print('--> Test that we can reach the local proxy (and thereby the server)')
@@ -99,7 +101,9 @@ try:
     test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {'Success': ok}
 except Exception as e:
     print('x-> Using the local proxy failed')
-    test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {'Success': False, 'Exception': e}
+    test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {
+        'Success': False, 'Exception': e
+    }
 
 print('--> Test that we can create a subtask')
 print('    Depending on the collaboration this test the encryption module')
@@ -118,8 +122,10 @@ try:
             'image': identity.get('image'),
             'collaboration_id': identity.get('collaboration_id'),
             'organizations': [{
-                'id': identity.get('organization_id'),
-                'input': base64.b64encode(pickle.dumps(killmsg)).decode('utf-8') # do not run any tests
+                'id': 2,  # identity.get('organization_id'),
+                'input':
+                    # do not run any tests
+                    base64.b64encode(pickle.dumps(killmsg)).decode('utf-8')
             }],
             'database': 'default'
         },
@@ -137,8 +143,8 @@ print('--> Verify that the container has no internet connection')
 try:
     try:
         response = requests.get('https://google.nl')
-    except ConnectionError as e:
-        print('--> Connection error catched')
+    except ConnectionError:
+        print('--> Connection error caught')
         # print(e)
         test_results['ISOLATION_TEST'] = {'Success': ok}
 except Exception as e:
@@ -157,23 +163,25 @@ if test_results['READ_TOKEN_FILE']['Success']:
 
         # port should be published as we are running this code.. So no
         # need for polling
-        response = requests.get(f'{host}:{port}/task/{id_}/result', headers={
-            'Authorization': 'Bearer ' + token
-        })
+        response = requests.get(
+            f'{host}:{port}/vpn/algorithm/addresses',
+            headers={'Authorization': 'Bearer ' + token},
+            params={'include_parent': True, 'include_children': True}
+        )
 
         # we also assume that only a single task has been posted as we
         # are not testing the connectivity between nodes yet
         p5 = p8 = False
         pU = True
-        result = response.json()[0]
+        result = response.json()
         print('debug')
         print(result)
         print(f'--> Found {len(result["ports"])} port(s)')
-        for port in result['ports']:
-            if port['label'] =='port5':
+        for port in result['addresses']:
+            if port['label'] == 'port5':
                 print(f'--> found \'port5\':{port["port"]}')
                 p5 = True
-            elif port['label'] =='port8':
+            elif port['label'] == 'port8':
                 print(f'--> found \'port8\':{port["port"]}')
                 p8 = True
             else:
