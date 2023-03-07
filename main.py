@@ -176,13 +176,13 @@ if test_results['READ_TOKEN_FILE']['Success']:
         result = response.json()
         print('debug')
         print(result)
-        print(f'--> Found {len(result["ports"])} port(s)')
-        for port in result['addresses']:
-            if port['label'] == 'port5':
-                print(f'--> found \'port5\':{port["port"]}')
+        print(f'--> Found {len(result["addresses"])} port(s)')
+        for addr in result['addresses']:
+            if addr['label'] == 'port5':
+                print(f'--> found \'port5\':{addr["port"]}')
                 p5 = True
-            elif port['label'] == 'port8':
-                print(f'--> found \'port8\':{port["port"]}')
+            elif addr['label'] == 'port8':
+                print(f'--> found \'port8\':{addr["port"]}')
                 p8 = True
             else:
                 print('--> Found an unexpected port!')
