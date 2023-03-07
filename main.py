@@ -179,10 +179,10 @@ if test_results['READ_TOKEN_FILE']['Success']:
         print(f'--> Found {len(result["addresses"])} port(s)')
         for addr in result['addresses']:
             if addr['label'] == 'port5':
-                print(f'--> found \'port5\':{addr["port"]}')
+                print(f'--> found "port5": {addr["port"]}')
                 p5 = True
             elif addr['label'] == 'port8':
-                print(f'--> found \'port8\':{addr["port"]}')
+                print(f'--> found "port8":{addr["port"]}')
                 p8 = True
             else:
                 print('--> Found an unexpected port!')
