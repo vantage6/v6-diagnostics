@@ -122,7 +122,7 @@ try:
             'image': identity.get('image'),
             'collaboration_id': identity.get('collaboration_id'),
             'organizations': [{
-                'id': 2,  # identity.get('organization_id'),
+                'id': identity.get('organization_id'),
                 'input':
                     # do not run any tests
                     base64.b64encode(pickle.dumps(killmsg)).decode('utf-8')
