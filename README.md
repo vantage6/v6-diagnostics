@@ -13,7 +13,17 @@ This algorithm is part of the [vantage6](https://vantage6.ai) solution. Vantage6
 ## Usage
 TODO
 
-### LICENCE
+## Build
+
+### Package
+```bash
+poetry build
+```
+
+### Docker image
+....
+
+## LICENCE
 Apache License 2.0
 
 ## Read more
