@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "v6-diagnostics"
+version = "0.1.0"
+description = "vantage6 infrastructure diagnostics tools"
+authors = ["Frank Martin <frank@grafikus.nl>", "Djura Smits <djura.smits@gmail.com>", "Bart van Beusekom <b.vanbeusekom@iknl.nl>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+vantage6-client = "^3.3.7"
+pyjwt = "^2.4.0"
+
+[tool.poetry.dev-dependencies]
+clize = "^4.2.1"
+pytest = "^6.2.5"
+ruff = "^0.0.244"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
