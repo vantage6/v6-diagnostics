@@ -59,6 +59,7 @@ import json
 from pathlib import Path
 
 from requests.exceptions import ConnectionError
+from vantage6.client.algorithm_client import AlgorithmClient
 
 from v6_diagnostics.util import DiagnosticResult, header
 
@@ -158,28 +159,28 @@ def diagnose_local_proxy_subtask():
             jwt.decode(token, options={"verify_signature": False})['sub']
         )
 
-        response = requests.post(
-            f'{host}:{port}/task',
-            json={
-                'name': 'feature-tester-subtask',
-                'description': 'This task is from the feature tester',
-                'image': identity.get('image'),
-                'collaboration_id': identity.get('collaboration_id'),
-                'organizations': [{
-                    'id': identity.get('organization_id'),
-                    'input':
-                        base64.b64encode(
-                            json.dumps({'method': 'stop'})
-                        ).decode('utf-8')
-                }],
-                'database': 'default'
-            },
-            headers={'Authorization': f'Bearer {token}'}
+        client = AlgorithmClient(host, port, token)
+        input_ = base64.b64encode(
+            json.dumps({
+                'method': 'diagnose_local_proxy_subtask_stop'
+            })
+        ).decode('utf-8')
+        task = client.task.create(
+            name='feature-tester-subtask',
+            description='This task is from the feature tester',
+            organization_ids=[identity.get('organization_id')],
+            input_=input_
         )
-        return DiagnosticResult('CREATE_SUBTASK',
-                                response.status_code == 200)
+        result = client.wait_for_result(task_id=task.get('id'))
+
+        return DiagnosticResult('CREATE_SUBTASK', bool(result.get('data')))
     except Exception as e:
         return DiagnosticResult('CREATE_SUBTASK', False, exception=e)
+
+
+def diagnose_local_proxy_subtask_stop():
+    """Subtask stop"""
+    return True
 
 
 def diagnose_isolation():
