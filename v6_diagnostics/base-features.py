@@ -1,3 +1,54 @@
+"""
+This script is used to test the basic features of the algorithm container. It
+does not use any wrapper functions. The following features are tested:
+
+    Environment variables
+        Reports the environment variables that are set in the algorithm
+        container by the node instance. For example the location of the input,
+        token and output files.
+    Input file
+        Reports the contents of the input file. You can verify that the input
+        set by the client is actually received by the algorithm.
+    Output file
+        Writes 'test' to the output file and reads it back.
+    Token file
+        Prints the contents of the token file. It should contain a JWT that you
+        can decode and verify the payload. The payload contains information
+        like the organization and collaboration ids.
+    Temporary directory
+        Creates a file in the temporary directory. The temporary directory is
+        a directory that is shared between all containers that share the same
+        run id. This checks that the temporary directory is writable.
+    Local proxy
+        Sends a request to the local proxy. The local proxy is used to reach
+        the central server from the algorithm container. This is needed as
+        parent containers need to be able to create child containers
+        (=subtasks). The local proxy also handles encryption/decryption of the
+        input and results as the algorithm container is not allowed to know
+        the private key.
+    Subtask creation
+        Creates a subtask (using the local proxy) and waits for the result.
+    Isolation test
+        Checks if the algorithm container is isolated such that it can not reach
+        the internet. It tests this by trying to reach google.nl, so make sure
+        this is not a whitelisted domain when testing.
+    External port test
+        Check that the algorithm can find its own ports. Algorithms can
+        request a dedicated port for communication with other algorithm
+        containers. The port that they require is stored in the Dockerfile
+        using the ``EXPORT`` and ``LABEL`` keywords. For example:
+        ```Dockefile
+        LABEL p8888="port8"
+        EXPOSE 8888
+        ```
+        It however does not check that the application is actually listening
+        on the port.
+    Database readable
+        Check if the file-based database is readable.
+
+TODO: check that the temporary volume is readable and writable by the
+      child algorithm container.
+"""
 import os
 import requests
 import jwt
@@ -10,7 +61,7 @@ from requests.exceptions import ConnectionError
 test_results = {}
 
 #
-#   CHECK ENVIRONMENT VARIALBES
+#   CHECK ENVIRONMENT VARIABLES
 #
 print('--> Reading the environment variables')
 print(f'ENVIRONMENT: {os.environ}')
@@ -29,6 +80,10 @@ except Exception as e:
     print('x-> Reading input file failed')
     test_results['READ_INPUT_FILE'] = {'Success': False, 'Exception': e}
 
+#
+#  EXIT IF KILLMSG IS RECEIVED
+#  this implies that this is a child container
+#
 killmsg = 'stop'
 if pickle.loads(input_) == killmsg:
     print('--> This is a subtask from the feature tester. Exiting.')
@@ -205,4 +260,5 @@ for key in os.environ:
         else:
             print(f'--> database \'{key}\' is *not* reachable: {path_}')
 
+# print to log, so the results can be red
 print(test_results)
