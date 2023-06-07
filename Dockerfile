@@ -3,9 +3,9 @@ FROM continuumio/miniconda3
 
 # This is a placeholder that should be overloaded by invoking
 # docker build with '--build-arg PKG_NAME=...'
-ARG PKG_NAME="n2n_diagnostics"
+ARG PKG_NAME="v6_diagnostics"
 
-RUN apt update &&  apt install -y iproute2 traceroute iputils-ping curl
+RUN apt update && apt install -y iproute2 traceroute iputils-ping curl
 
 # install federated algorithm
 COPY . /app
