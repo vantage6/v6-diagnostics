@@ -29,9 +29,9 @@ does not use any wrapper functions. The following features are tested:
     Subtask creation
         Creates a subtask (using the local proxy) and waits for the result.
     Isolation test
-        Checks if the algorithm container is isolated such that it can not reach
-        the internet. It tests this by trying to reach google.nl, so make sure
-        this is not a whitelisted domain when testing.
+        Checks if the algorithm container is isolated such that it can not
+        reach the internet. It tests this by trying to reach google.nl, so make
+        sure this is not a whitelisted domain when testing.
     External port test
         Check that the algorithm can find its own ports. Algorithms can
         request a dedicated port for communication with other algorithm
@@ -48,173 +48,160 @@ does not use any wrapper functions. The following features are tested:
 
 TODO: check that the temporary volume is readable and writable by the
       child algorithm container.
+TODO: child container should trigger different function
 """
 import os
 import requests
 import jwt
 import base64
-import pickle
+import json
 
 from pathlib import Path
+
 from requests.exceptions import ConnectionError
 
-test_results = {}
+from v6_diagnostics.util import DiagnosticResult, header
 
-#
-#   CHECK ENVIRONMENT VARIABLES
-#
-print('--> Reading the environment variables')
-print(f'ENVIRONMENT: {os.environ}')
-test_results['environment'] = os.environ
 
-#
-#   CHECK INPUT_FILE
-#
-try:
-    with open(os.environ['INPUT_FILE'], 'rb') as f:
-        print('--> Reading input file')
-        input_ = f.read()
-        print(f'INPUT FILE: {input_}')
-    test_results['READ_INPUT_FILE'] = {'Success': True}
-except Exception as e:
-    print('x-> Reading input file failed')
-    test_results['READ_INPUT_FILE'] = {'Success': False, 'Exception': e}
+def diagnose_environment():
+    """Diagnose the environment of the algorithm container."""
+    header('Diagnose the environment of the algorithm container')
+    # print(f'ENVIRONMENT: {os.environ}')
+    return DiagnosticResult('ENVIRONMENT', True, os.environ)
 
-#
-#  EXIT IF KILLMSG IS RECEIVED
-#  this implies that this is a child container
-#
-killmsg = 'stop'
-if pickle.loads(input_) == killmsg:
-    print('--> This is a subtask from the feature tester. Exiting.')
-    exit(0)
 
-#
-#   CHECK OUTPUT FILE
-#
-try:
-
-    with open(os.environ['OUTPUT_FILE'], 'w') as f:
-        print('--> Writing to output file (contents: test)')
-        f.write('test')
-
-    with open(os.environ['OUTPUT_FILE'], 'r') as f:
-        print('--> Reading output file back and check')
-        print(f.read())
-
-    test_results['WRITE_READ_OUTPUT_FILE'] = {'Success': True}
-except Exception as e:
-    print('x-> Reading or Writing output file failed')
-    test_results['WRITE_READ_OUTPUT_FILE'] = {'Success': False, 'Exception': e}
-
-#
-#   CHECK TOKEN FILE
-#
-try:
-    with open(os.environ['TOKEN_FILE'], 'r') as f:
-        print('--> Reading token file')
-        token = f.read()
-        print(f'TOKEN: {token}')
-
-    test_results['READ_TOKEN_FILE'] = {'Success': True}
-except Exception as e:
-    print('x-> Reading token file failed')
-    test_results['READ_TOKEN_FILE'] = {'Success': False, 'Exception': e}
-
-#
-#   CHECK TEMPORARY VOLUME
-#
-print('--> Test temporary volume')
-try:
-    temp_file = f'{os.environ["TEMPORARY_FOLDER"]}/test.txt'
-    with open(temp_file, 'w') as f:
-        print(f'--> Writing to temporary file: {temp_file}')
-        f.write('test')
-    test_results['TEMPORARY_VOLUME'] = {'Success': True}
-except Exception as e:
-    print('x-> Writing to temporary folder failed')
-    test_results['TEMPORARY_VOLUME'] = {'Success': False, 'Exception': e}
-
-print('--> Test that the temporary file is created')
-try:
-    file_exists = Path(temp_file).exists()
-    print(f'FILE CREATED: {file_exists}')
-    test_results['TEMPORARY_VOLUME_FILE_EXISTS'] = {'Success': file_exists}
-except Exception as e:
-    print('x-> Test temporary volume failed')
-    test_results['TEMPORARY_VOLUME_FILE_EXISTS'] = {
-        'Success': False, 'Exception': e
-    }
-
-# --> Check that we can reach the local proxy
-print('--> Test that we can reach the local proxy (and thereby the server)')
-try:
-    host = os.environ['HOST']
-    port = os.environ['PORT']
-    response = requests.get(f'{host}:{port}/version')
-    ok = response.status_code == 200
-    test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {'Success': ok}
-except Exception as e:
-    print('x-> Using the local proxy failed')
-    test_results['LOCAL_PROXY_CENTRAL_SERVER'] = {
-        'Success': False, 'Exception': e
-    }
-
-print('--> Test that we can create a subtask')
-print('    Depending on the collaboration this test the encryption module')
-try:
-    host = os.environ['HOST']
-    port = os.environ['PORT']
-
-    # obtain collaboration id which is stored in the token
-    identity = (jwt.decode(token, options={"verify_signature": False})['sub'])
-
-    response = requests.post(
-        f'{host}:{port}/task',
-        json={
-            'name': 'feature-tester-subtask',
-            'description': 'This task is initiated from the feature tester',
-            'image': identity.get('image'),
-            'collaboration_id': identity.get('collaboration_id'),
-            'organizations': [{
-                'id': identity.get('organization_id'),
-                'input':
-                    # do not run any tests
-                    base64.b64encode(pickle.dumps(killmsg)).decode('utf-8')
-            }],
-            'database': 'default'
-        },
-        headers={'Authorization': f'Bearer {token}'}
-    )
-
-    test_results['CREATE_SUB_TASK'] = response.json()
-
-except Exception as e:
-    print('x-> Using the local proxy to create a task failed')
-    test_results['CREATE_SUB_TASK'] = {'Success': False, 'Exception': e}
-
-# --> check that we cannot reach another address
-print('--> Verify that the container has no internet connection')
-try:
+def diagnose_input_file():
+    """Diagnose the input file."""
+    header('Diagnose the input file')
     try:
-        response = requests.get('https://google.nl')
+        with open(os.environ['INPUT_FILE'], 'rb') as f:
+            input_ = f.read()
+        return DiagnosticResult('INPUT_FILE', True, input_)
+    except Exception as e:
+        return DiagnosticResult('INPUT_FILE', False, exception=e)
+
+
+def diagnose_output_file():
+    """Diagnose the output file."""
+    header('Diagnose the output file')
+    test_word = 'test'
+    try:
+        with open(os.environ['OUTPUT_FILE'], 'w') as f:
+            f.write(test_word)
+
+        with open(os.environ['OUTPUT_FILE'], 'r') as f:
+            success = f.read() == test_word
+
+        return DiagnosticResult('OUTPUT_FILE', success)
+    except Exception as e:
+        return DiagnosticResult('OUTPUT_FILE', False, exception=e)
+
+
+def diagnose_token_file():
+    """Diagnose the token file."""
+    header('Diagnose the token file')
+    try:
+        with open(os.environ['TOKEN_FILE'], 'r') as f:
+            token = f.read()
+        return DiagnosticResult('TOKEN_FILE', True, token)
+    except Exception as e:
+        return DiagnosticResult('TOKEN_FILE', False, exception=e)
+
+
+def diagnose_temporary_volume():
+    """Diagnose the temporary volume."""
+    header('Diagnose writing to temporary volume')
+    try:
+        temp_file = Path(os.environ["TEMPORARY_FOLDER"]) / 'test.txt'
+        with open(temp_file, 'w') as f:
+            f.write('test')
+        return DiagnosticResult('TEMPORARY_VOLUME', True)
+    except Exception as e:
+        return DiagnosticResult('TEMPORARY_VOLUME', False, exception=e)
+
+
+def diagnose_temporary_volume_file_exists():
+    """Diagnose the temporary volume."""
+    header('Diagnose that the temporary file is created')
+    try:
+        temp_file = Path(os.environ["TEMPORARY_FOLDER"]) / 'test.txt'
+        file_exists = Path(temp_file).exists()
+        return DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS', file_exists)
+    except Exception as e:
+        return DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS', False,
+                                exception=e)
+
+
+def diagnose_local_proxy():
+    """Diagnose the local proxy."""
+    header('Diagnose the local proxy')
+    try:
+        host = os.environ['HOST']
+        port = os.environ['PORT']
+        response = requests.get(f'{host}:{port}/version')
+        return DiagnosticResult('LOCAL_PROXY', response.status_code == 200)
+    except Exception as e:
+        return DiagnosticResult('LOCAL_PROXY', False, exception=e)
+
+
+def diagnose_local_proxy_subtask():
+    """Diagnose the local proxy."""
+    header('Diagnose the local proxy subtask')
+    try:
+        host = os.environ['HOST']
+        port = os.environ['PORT']
+
+        with open(os.environ['TOKEN_FILE'], 'r') as f:
+            token = f.read()
+
+        identity = (
+            jwt.decode(token, options={"verify_signature": False})['sub']
+        )
+
+        response = requests.post(
+            f'{host}:{port}/task',
+            json={
+                'name': 'feature-tester-subtask',
+                'description': 'This task is from the feature tester',
+                'image': identity.get('image'),
+                'collaboration_id': identity.get('collaboration_id'),
+                'organizations': [{
+                    'id': identity.get('organization_id'),
+                    'input':
+                        base64.b64encode(
+                            json.dumps({'method': 'stop'})
+                        ).decode('utf-8')
+                }],
+                'database': 'default'
+            },
+            headers={'Authorization': f'Bearer {token}'}
+        )
+        return DiagnosticResult('CREATE_SUBTASK',
+                                response.status_code == 200)
+    except Exception as e:
+        return DiagnosticResult('CREATE_SUBTASK', False, exception=e)
+
+
+def diagnose_isolation():
+    header('Diagnose the isolation of the algorithm container')
+    try:
+        requests.get('https://google.nl')
     except ConnectionError:
-        print('--> Connection error caught')
-        # print(e)
-        test_results['ISOLATION_TEST'] = {'Success': ok}
-except Exception as e:
-    print('x-> Testing an external connection failed...')
-    test_results['ISOLATION_TEST'] = {'Success': False, 'Exception': e}
+        return DiagnosticResult('ISOLATION', True)
+    except Exception as e:
+        return DiagnosticResult('ISOLATION', False, exception=e)
+    return DiagnosticResult('ISOLATION', False)
 
-#
-# External port test
-#
-print('--> Check that two ports have been published')
-if test_results['READ_TOKEN_FILE']['Success']:
+
+def diagnose_external_port():
+    """Diagnose the external port."""
+    header('Diagnose the external port')
     try:
-        # obtain own task id
-        id_ = (jwt.decode(token, options={"verify_signature": False})['sub'])\
-            .get('task_id')
+        with open(os.environ['TOKEN_FILE'], 'r') as f:
+            token = f.read()
+
+        host = os.environ['HOST']
+        port = os.environ['PORT']
 
         # port should be published as we are running this code.. So no
         # need for polling
@@ -243,22 +230,21 @@ if test_results['READ_TOKEN_FILE']['Success']:
                 print('--> Found an unexpected port!')
                 pU = False
 
-        test_results['EXTERNAL_PORT_TEST'] = {'Success': all([p5, p8, pU])}
-
+        return DiagnosticResult('EXTERNAL_PORT_TEST', all([p5, p8, pU]),
+                                payload=result)
     except Exception as e:
-        print('--> external port check failed')
-        test_results['EXTERNAL_PORT_TEST'] = {'Success': False, 'Exception': e}
+        return DiagnosticResult('EXTERNAL_PORT_TEST', False, exception=e)
 
-# Only works for file based databases
-print('--> Check attached databases exists')
-for key in os.environ:
-    if key.endswith('_DATABASE_URI'):
-        print(f'--> Found database-path: {key}')
-        path_ = os.environ[key]
-        if Path(path_).exists():
-            print(f'--> database \'{key}\' is reachable: {path_}')
+
+def diagnose_database():
+    """Diagnose the file based database."""
+    header('Diagnose the file based database')
+    try:
+        db_uri = os.environ['DATABASE_URI']
+        db_path = Path(db_uri.replace('sqlite:///', ''))
+        if db_path.exists():
+            return DiagnosticResult('DATABASE', True, payload=db_path)
         else:
-            print(f'--> database \'{key}\' is *not* reachable: {path_}')
-
-# print to log, so the results can be red
-print(test_results)
+            return DiagnosticResult('DATABASE', False, payload=db_path)
+    except Exception as e:
+        return DiagnosticResult('DATABASE', False, exception=e)
