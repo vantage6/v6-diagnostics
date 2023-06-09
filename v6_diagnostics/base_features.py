@@ -217,18 +217,12 @@ def diagnose_external_port():
         p5 = p8 = False
         pU = True
         result = response.json()
-        print('debug')
-        print(result)
-        print(f'--> Found {len(result["addresses"])} port(s)')
         for addr in result['addresses']:
             if addr['label'] == 'port5':
-                print(f'--> found "port5": {addr["port"]}')
                 p5 = True
             elif addr['label'] == 'port8':
-                print(f'--> found "port8":{addr["port"]}')
                 p8 = True
             else:
-                print('--> Found an unexpected port!')
                 pU = False
 
         return DiagnosticResult('EXTERNAL_PORT_TEST', all([p5, p8, pU]),
