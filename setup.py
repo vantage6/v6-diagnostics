@@ -22,6 +22,7 @@ setup(
     install_requires=[
         'vantage6-client',
         'requests',
-        'jwt',
+        'pyjwt',
+        'rich'
     ]
 )

@@ -53,12 +53,11 @@ TODO: child container should trigger different function
 import os
 import requests
 import jwt
-import base64
-import json
+import time
 
 from pathlib import Path
-
 from requests.exceptions import ConnectionError
+
 from vantage6.client.algorithm_client import AlgorithmClient
 
 from v6_diagnostics.util import DiagnosticResult, header
@@ -67,8 +66,9 @@ from v6_diagnostics.util import DiagnosticResult, header
 def diagnose_environment():
     """Diagnose the environment of the algorithm container."""
     header('Diagnose the environment of the algorithm container')
-    # print(f'ENVIRONMENT: {os.environ}')
-    return DiagnosticResult('ENVIRONMENT', True, os.environ)
+    diagnostic = DiagnosticResult('ENVIRONMENT', True, os.environ)
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_input_file():
@@ -77,9 +77,13 @@ def diagnose_input_file():
     try:
         with open(os.environ['INPUT_FILE'], 'rb') as f:
             input_ = f.read()
-        return DiagnosticResult('INPUT_FILE', True, input_)
+        diagnostic = DiagnosticResult('INPUT_FILE', True, input_)
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('INPUT_FILE', False, exception=e)
+        diagnostic = DiagnosticResult('INPUT_FILE', False, exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_output_file():
@@ -93,9 +97,13 @@ def diagnose_output_file():
         with open(os.environ['OUTPUT_FILE'], 'r') as f:
             success = f.read() == test_word
 
-        return DiagnosticResult('OUTPUT_FILE', success)
+        diagnostic = DiagnosticResult('OUTPUT_FILE', success)
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('OUTPUT_FILE', False, exception=e)
+        diagnostic = DiagnosticResult('OUTPUT_FILE', False, exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_token_file():
@@ -104,9 +112,13 @@ def diagnose_token_file():
     try:
         with open(os.environ['TOKEN_FILE'], 'r') as f:
             token = f.read()
-        return DiagnosticResult('TOKEN_FILE', True, token)
+        diagnostic = DiagnosticResult('TOKEN_FILE', True, token)
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('TOKEN_FILE', False, exception=e)
+        diagnostic = DiagnosticResult('TOKEN_FILE', False, exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_temporary_volume():
@@ -116,9 +128,13 @@ def diagnose_temporary_volume():
         temp_file = Path(os.environ["TEMPORARY_FOLDER"]) / 'test.txt'
         with open(temp_file, 'w') as f:
             f.write('test')
-        return DiagnosticResult('TEMPORARY_VOLUME', True)
+        diagnostic = DiagnosticResult('TEMPORARY_VOLUME', True)
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('TEMPORARY_VOLUME', False, exception=e)
+        diagnostic = DiagnosticResult('TEMPORARY_VOLUME', False, exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_temporary_volume_file_exists():
@@ -127,10 +143,15 @@ def diagnose_temporary_volume_file_exists():
     try:
         temp_file = Path(os.environ["TEMPORARY_FOLDER"]) / 'test.txt'
         file_exists = Path(temp_file).exists()
-        return DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS', file_exists)
+        diagnostic = DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS',
+                                      file_exists)
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS', False,
-                                exception=e)
+        diagnostic = DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS', False,
+                                      exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_local_proxy():
@@ -140,9 +161,13 @@ def diagnose_local_proxy():
         host = os.environ['HOST']
         port = os.environ['PORT']
         response = requests.get(f'{host}:{port}/version')
-        return DiagnosticResult('LOCAL_PROXY', response.status_code == 200)
+        diagnostic = DiagnosticResult('LOCAL_PROXY', response.status_code == 200)
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('LOCAL_PROXY', False, exception=e)
+        diagnostic = DiagnosticResult('LOCAL_PROXY', False, exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_local_proxy_subtask():
@@ -159,23 +184,32 @@ def diagnose_local_proxy_subtask():
             jwt.decode(token, options={"verify_signature": False})['sub']
         )
 
-        client = AlgorithmClient(host, port, token)
-        input_ = base64.b64encode(
-            json.dumps({
-                'method': 'diagnose_local_proxy_subtask_stop'
-            })
-        ).decode('utf-8')
+        client = AlgorithmClient(token, host=host, port=port)
+        input_ = {
+            'method': 'diagnose_local_proxy_subtask_stop'
+        }
         task = client.task.create(
             name='feature-tester-subtask',
             description='This task is from the feature tester',
             organization_ids=[identity.get('organization_id')],
             input_=input_
         )
-        result = client.wait_for_result(task_id=task.get('id'))
 
-        return DiagnosticResult('CREATE_SUBTASK', bool(result.get('data')))
+
+        while not client.task.get(task.get('id'))['complete']:
+            time.sleep(1)
+
+        result = client.result.get(task.get('id'))
+
+        diagnostic = DiagnosticResult('CREATE_SUBTASK',
+                                      bool(result.get('data')),
+                                      payload=result.get('data'))
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('CREATE_SUBTASK', False, exception=e)
+        diagnostic = DiagnosticResult('CREATE_SUBTASK', False, exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_local_proxy_subtask_stop():
@@ -185,13 +219,24 @@ def diagnose_local_proxy_subtask_stop():
 
 def diagnose_isolation():
     header('Diagnose the isolation of the algorithm container')
+
     try:
         requests.get('https://google.nl')
     except ConnectionError:
-        return DiagnosticResult('ISOLATION', True)
+        diagnostic = DiagnosticResult('ISOLATION', True)
+        print(diagnostic)
+        return diagnostic
     except Exception as e:
-        return DiagnosticResult('ISOLATION', False, exception=e)
-    return DiagnosticResult('ISOLATION', False)
+        # We could end up here by some other error. This does not necessary
+        # mean that the algorithm is not isolated.
+        diagnostic = DiagnosticResult('ISOLATION', False, exception=e)
+        print(diagnostic)
+        return diagnostic
+
+    # If we get here, we have a connection to the internet
+    diagnostic = DiagnosticResult('ISOLATION', False)
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_external_port():
@@ -217,18 +262,28 @@ def diagnose_external_port():
         p5 = p8 = False
         pU = True
         result = response.json()
+
+        print(f'--> Found {len(result["addresses"])} port(s)')
         for addr in result['addresses']:
             if addr['label'] == 'port5':
+                print(f'--> found "port5": {addr["port"]}')
                 p5 = True
             elif addr['label'] == 'port8':
+                print(f'--> found "port8":{addr["port"]}')
                 p8 = True
             else:
+                print('--> Found an unexpected port!')
                 pU = False
 
-        return DiagnosticResult('EXTERNAL_PORT_TEST', all([p5, p8, pU]),
-                                payload=result)
+        diagnostic = DiagnosticResult('EXTERNAL_PORT_TEST', all([p5, p8, pU]),
+                                      payload=result)
+        print(diagnostic)
+        return diagnostic
+
     except Exception as e:
-        return DiagnosticResult('EXTERNAL_PORT_TEST', False, exception=e)
+        diagnostic = DiagnosticResult('EXTERNAL_PORT_TEST', False, exception=e)
+        print(diagnostic)
+        return diagnostic
 
 
 def diagnose_database():
@@ -238,8 +293,14 @@ def diagnose_database():
         db_uri = os.environ['DATABASE_URI']
         db_path = Path(db_uri.replace('sqlite:///', ''))
         if db_path.exists():
-            return DiagnosticResult('DATABASE', True, payload=db_path)
+            diagnostic = DiagnosticResult('DATABASE', True, payload=db_path)
+            print(diagnostic)
+            return diagnostic
         else:
-            return DiagnosticResult('DATABASE', False, payload=db_path)
+            diagnostic = DiagnosticResult('DATABASE', False, payload=db_path)
+            print(diagnostic)
+            return diagnostic
     except Exception as e:
-        return DiagnosticResult('DATABASE', False, exception=e)
+        diagnostic = DiagnosticResult('DATABASE', False, exception=e)
+        print(diagnostic)
+        return diagnostic

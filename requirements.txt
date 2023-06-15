@@ -1,2 +1,3 @@
 requests
-jwt
+pyjwt
+rich
