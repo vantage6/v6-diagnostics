@@ -23,6 +23,12 @@ setup(
         'vantage6-client==3.8.8',
         'requests',
         'pyjwt',
-        'rich'
-    ]
+        'rich',
+        'click'
+    ],
+    entry_points={
+        'console_scripts': [
+            'vtest=v6_diagnostics.cli:feature_tester',
+        ],
+    },
 )

@@ -2,3 +2,4 @@ vantage6-client
 requests
 pyjwt
 rich
+click
