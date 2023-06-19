@@ -1,5 +1,7 @@
 # Note that the pickle module is no longer supported in vantage6 v4+.
 import pickle
+import click
+
 from typing import Any
 
 from rich.console import Console
@@ -17,7 +19,7 @@ class DiagnosticRunner:
         return self.base_features()
 
     def base_features(self) -> None:
-        task = client.task.create(
+        task = self.client.task.create(
             collaboration=1,
             name="test",
             description="Diagnostic test",
@@ -29,7 +31,8 @@ class DiagnosticRunner:
             organizations=[1],
         )
 
-        result = client.wait_for_results(task_id=task.get("id"))
+        result = self.client.wait_for_results(task_id=task.get("id"))
+        print("\n")
 
         res = pickle.loads(result[0]["result"])
         t_ = Table(title="Basic Diagnostics Summary")
@@ -59,6 +62,26 @@ class DiagnosticRunner:
         return res
 
 
+@click.command(name="feature-tester")
+@click.option("--host", type=str, default="http://localhost")
+@click.option("--port", type=int, default=5000)
+@click.option("--path", type=str, default="")
+@click.option("--username", type=str, default="root")
+@click.option("--password", type=str, default="root")
+def feature_tester(host, port, path, username, password):
+    client = UserClient(
+        host=host,
+        port=port,
+        path=path,
+        log_level='critical'
+    )
+    client.authenticate(username=username, password=password)
+    client.setup_encryption(None)
+    diagnose = DiagnosticRunner(client)
+    res = diagnose()
+    return res
+
+
 if __name__ == '__main__':
     client = UserClient(
         host="https://petronas.vantage6.ai",
@@ -66,7 +89,7 @@ if __name__ == '__main__':
         path=""
     )
 
-    client.authenticate(username="***", password="***")
+    client.authenticate(username="root", password="P3tronas@Iknl!")
     client.setup_encryption(None)
 
     diagnose = DiagnosticRunner(client)
