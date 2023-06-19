@@ -1,15 +1,20 @@
 # Note that the pickle module is no longer supported in vantage6 v4+.
 import pickle
+from typing import Any
 
 from rich.console import Console
 from rich.table import Table
 
 from vantage6.client import UserClient
 
+
 class DiagnosticRunner:
 
     def __init__(self, client: UserClient):
         self.client = client
+
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        return self.base_features()
 
     def base_features(self) -> None:
         task = client.task.create(
@@ -42,7 +47,7 @@ class DiagnosticRunner:
             else:
                 success = ":x: [red]failed[/red]"
                 e_.add_row(diag["name"], diag["exception"], diag["traceback"],
-                        diag["payload"])
+                           diag["payload"])
                 errors = True
             t_.add_row(diag["name"], success)
 
@@ -50,6 +55,8 @@ class DiagnosticRunner:
         console.print(t_)
         if errors:
             console.print(e_)
+
+        return res
 
 
 if __name__ == '__main__':
@@ -62,6 +69,6 @@ if __name__ == '__main__':
     client.authenticate(username="***", password="***")
     client.setup_encryption(None)
 
-    runner = DiagnosticRunner(client)
+    diagnose = DiagnosticRunner(client)
 
-    runner.base_features()
+    res = diagnose()

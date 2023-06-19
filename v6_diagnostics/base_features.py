@@ -56,8 +56,8 @@ import jwt
 import time
 
 from pathlib import Path
-from requests.exceptions import ConnectionError
 
+from requests.exceptions import ConnectionError
 from vantage6.client.algorithm_client import AlgorithmClient
 
 from v6_diagnostics.util import DiagnosticResult, header
@@ -161,7 +161,8 @@ def diagnose_local_proxy():
         host = os.environ['HOST']
         port = os.environ['PORT']
         response = requests.get(f'{host}:{port}/version')
-        diagnostic = DiagnosticResult('LOCAL_PROXY', response.status_code == 200)
+        diagnostic = DiagnosticResult('LOCAL_PROXY',
+                                      response.status_code == 200)
         print(diagnostic)
         return diagnostic
     except Exception as e:
@@ -184,10 +185,12 @@ def diagnose_local_proxy_subtask():
             jwt.decode(token, options={"verify_signature": False})['sub']
         )
 
-        client = AlgorithmClient(token, host=host, port=port)
+        client = AlgorithmClient(token, host=host, port=port, path='')
         input_ = {
+            'master': True,
             'method': 'diagnose_local_proxy_subtask_stop'
         }
+
         task = client.task.create(
             name='feature-tester-subtask',
             description='This task is from the feature tester',
@@ -195,15 +198,12 @@ def diagnose_local_proxy_subtask():
             input_=input_
         )
 
-
         while not client.task.get(task.get('id'))['complete']:
             time.sleep(1)
 
-        result = client.result.get(task.get('id'))
+        result = client.result.get(task.get('id'))[0]
 
-        diagnostic = DiagnosticResult('CREATE_SUBTASK',
-                                      bool(result.get('data')),
-                                      payload=result.get('data'))
+        diagnostic = DiagnosticResult('CREATE_SUBTASK', result)
         print(diagnostic)
         return diagnostic
     except Exception as e:
@@ -212,14 +212,13 @@ def diagnose_local_proxy_subtask():
         return diagnostic
 
 
-def diagnose_local_proxy_subtask_stop():
+def diagnose_local_proxy_subtask_stop(*_args, **_kwargs):
     """Subtask stop"""
     return True
 
 
 def diagnose_isolation():
     header('Diagnose the isolation of the algorithm container')
-
     try:
         requests.get('https://google.nl')
     except ConnectionError:
@@ -262,17 +261,12 @@ def diagnose_external_port():
         p5 = p8 = False
         pU = True
         result = response.json()
-
-        print(f'--> Found {len(result["addresses"])} port(s)')
         for addr in result['addresses']:
             if addr['label'] == 'port5':
-                print(f'--> found "port5": {addr["port"]}')
                 p5 = True
             elif addr['label'] == 'port8':
-                print(f'--> found "port8":{addr["port"]}')
                 p8 = True
             else:
-                print('--> Found an unexpected port!')
                 pU = False
 
         diagnostic = DiagnosticResult('EXTERNAL_PORT_TEST', all([p5, p8, pU]),
