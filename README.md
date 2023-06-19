@@ -11,17 +11,46 @@
 This algorithm is part of the [vantage6](https://vantage6.ai) solution. Vantage6 allows to execute computations on federated datasets. This repository contains diagnostic tools for debugging and testing the vantage6 infrastructure on a high level.
 
 ## Usage
-TODO
+### Install
+```bash
+git clone https://github.com/vantage6/v6-diagnostic.git
+cd v6-diagnostic
+pip install .
+```
+
+### Execute
+```bash
+vtest --host http://localhost --port 5000 --username *** --password ***
+```
+
+```bash
+python -i v6_diagnostic/cli.py [host] [port] [path] [username] [password]
+```
+
+````python
+>>> from v6_diagnostic.cli import DiagnosticRunner
+>>> runner = DiagnosticRunner('http://localhost', 5000, '***', '***')
+>>> runner()
+````
 
 ## Build
 
 ### Package
 ```bash
-poetry build
+python setup.py sdist bdist_wheel
 ```
 
 ### Docker image
-....
+```bash
+# build the docker image
+make image
+
+# push the docker image to the registry
+make push
+
+# build and push the docker image
+make publish
+```
 
 ## LICENCE
 Apache License 2.0

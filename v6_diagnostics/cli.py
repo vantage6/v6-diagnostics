@@ -1,6 +1,7 @@
 # Note that the pickle module is no longer supported in vantage6 v4+.
 import pickle
 import click
+import sys
 
 from typing import Any
 
@@ -83,13 +84,17 @@ def feature_tester(host, port, path, username, password):
 
 
 if __name__ == '__main__':
-    client = UserClient(
-        host="https://petronas.vantage6.ai",
-        port=443,
-        path=""
-    )
 
-    client.authenticate(username="root", password="P3tronas@Iknl!")
+    # check number of arguments
+    if len(sys.argv) != 6:
+        print("Usage: python cli.py <host> <port> <path> <username> "
+              "<password>")
+        sys.exit(1)
+
+    (host, port, path, username, password) = sys.argv[1:]
+    client = UserClient(host=host, port=port, path=path)
+
+    client.authenticate(username=username, password=password)
     client.setup_encryption(None)
 
     diagnose = DiagnosticRunner(client)
