@@ -1,3 +1,5 @@
+from vantage6.client.algorithm_client import AlgorithmClient
+
 from v6_diagnostics.util import header, DiagnosticResult
 from v6_diagnostics.base_features import (  # noqa: F401
     diagnose_environment,
@@ -8,20 +10,22 @@ from v6_diagnostics.base_features import (  # noqa: F401
     diagnose_temporary_volume_file_exists,
     diagnose_local_proxy,
     diagnose_local_proxy_subtask,
-    diagnose_local_proxy_subtask_stop,  # child task runs this
+    # child task runs this, so we need to keep the import here
+    diagnose_local_proxy_subtask_stop,
     diagnose_isolation,
     diagnose_external_port,
     diagnose_database
 )
 
+from v6_diagnostics.vpn import (  # noqa: F401
+    diagnose_vpn_connection,
+    RPC_echo,
+    RPC_wait
+)
 
-def main(client, *args, **kwargs):
-    base = base_features()
-    vpn = vpn_features()
-    return base + vpn
 
-
-def base_features() -> list[DiagnosticResult]:
+def base_features(client: AlgorithmClient, *args, **kwargs) \
+        -> list[DiagnosticResult]:
     """Run all diagnostics."""
     header('Running base feature diagnostics')
     results = [
@@ -32,7 +36,7 @@ def base_features() -> list[DiagnosticResult]:
         diagnose_temporary_volume().json,
         diagnose_temporary_volume_file_exists().json,
         diagnose_local_proxy().json,
-        diagnose_local_proxy_subtask().json,
+        diagnose_local_proxy_subtask(client).json,
         diagnose_isolation().json,
         diagnose_external_port().json,
         diagnose_database().json
@@ -43,5 +47,11 @@ def base_features() -> list[DiagnosticResult]:
     return results
 
 
-def vpn_features() -> list[DiagnosticResult]:
-    return []
+def vpn_features(client: AlgorithmClient, _, other_nodes) \
+        -> list[DiagnosticResult]:
+    """Run all diagnostics."""
+    header('Running VPN feature diagnostics')
+    results = [
+        diagnose_vpn_connection(client, other_nodes).json
+    ]
+    return results

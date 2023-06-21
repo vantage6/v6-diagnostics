@@ -63,7 +63,7 @@ from vantage6.client.algorithm_client import AlgorithmClient
 from v6_diagnostics.util import DiagnosticResult, header
 
 
-def diagnose_environment():
+def diagnose_environment() -> DiagnosticResult:
     """Diagnose the environment of the algorithm container."""
     header('Diagnose the environment of the algorithm container')
     diagnostic = DiagnosticResult('ENVIRONMENT', True, os.environ)
@@ -71,7 +71,7 @@ def diagnose_environment():
     return diagnostic
 
 
-def diagnose_input_file():
+def diagnose_input_file() -> DiagnosticResult:
     """Diagnose the input file."""
     header('Diagnose the input file')
     try:
@@ -86,7 +86,7 @@ def diagnose_input_file():
         return diagnostic
 
 
-def diagnose_output_file():
+def diagnose_output_file() -> DiagnosticResult:
     """Diagnose the output file."""
     header('Diagnose the output file')
     test_word = 'test'
@@ -106,7 +106,7 @@ def diagnose_output_file():
         return diagnostic
 
 
-def diagnose_token_file():
+def diagnose_token_file() -> DiagnosticResult:
     """Diagnose the token file."""
     header('Diagnose the token file')
     try:
@@ -121,7 +121,7 @@ def diagnose_token_file():
         return diagnostic
 
 
-def diagnose_temporary_volume():
+def diagnose_temporary_volume() -> DiagnosticResult:
     """Diagnose the temporary volume."""
     header('Diagnose writing to temporary volume')
     try:
@@ -137,7 +137,7 @@ def diagnose_temporary_volume():
         return diagnostic
 
 
-def diagnose_temporary_volume_file_exists():
+def diagnose_temporary_volume_file_exists() -> DiagnosticResult:
     """Diagnose the temporary volume."""
     header('Diagnose that the temporary file is created')
     try:
@@ -154,7 +154,7 @@ def diagnose_temporary_volume_file_exists():
         return diagnostic
 
 
-def diagnose_local_proxy():
+def diagnose_local_proxy() -> DiagnosticResult:
     """Diagnose the local proxy."""
     header('Diagnose the local proxy')
     try:
@@ -171,12 +171,10 @@ def diagnose_local_proxy():
         return diagnostic
 
 
-def diagnose_local_proxy_subtask():
+def diagnose_local_proxy_subtask(client: AlgorithmClient) -> DiagnosticResult:
     """Diagnose the local proxy."""
     header('Diagnose the local proxy subtask')
     try:
-        host = os.environ['HOST']
-        port = os.environ['PORT']
 
         with open(os.environ['TOKEN_FILE'], 'r') as f:
             token = f.read()
@@ -185,7 +183,6 @@ def diagnose_local_proxy_subtask():
             jwt.decode(token, options={"verify_signature": False})['sub']
         )
 
-        client = AlgorithmClient(token, host=host, port=port, path='')
         input_ = {
             'master': True,
             'method': 'diagnose_local_proxy_subtask_stop'
@@ -212,12 +209,12 @@ def diagnose_local_proxy_subtask():
         return diagnostic
 
 
-def diagnose_local_proxy_subtask_stop(*_args, **_kwargs):
+def diagnose_local_proxy_subtask_stop(*_args, **_kwargs) -> bool:
     """Subtask stop"""
     return True
 
 
-def diagnose_isolation():
+def diagnose_isolation() -> DiagnosticResult:
     header('Diagnose the isolation of the algorithm container')
     try:
         requests.get('https://google.nl')
@@ -238,7 +235,7 @@ def diagnose_isolation():
     return diagnostic
 
 
-def diagnose_external_port():
+def diagnose_external_port() -> DiagnosticResult:
     """Diagnose the external port."""
     header('Diagnose the external port')
     try:
@@ -280,7 +277,7 @@ def diagnose_external_port():
         return diagnostic
 
 
-def diagnose_database():
+def diagnose_database() -> DiagnosticResult:
     """Diagnose the file based database."""
     header('Diagnose the file based database')
     try:
