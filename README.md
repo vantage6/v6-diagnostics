@@ -3,12 +3,12 @@
   <a href="https://vantage6.ai"><img src="https://github.com/IKNL/guidelines/blob/master/resources/logos/vantage6.png?raw=true" alt="vantage6" width="400"></a>
 </h1>
 
-<h3 align=center> A privacy preserving federated analysis solution</h3>
+<h3 align=center> An open source infrastructure for privacy enhancing analysis</h3>
 
 --------------------
 
-# v6-boilerplate-py
-This algorithm is part of the [vantage6](https://vantage6.ai) solution. Vantage6 allows to execute computations on federated datasets. This repository contains diagnostic tools for debugging and testing the vantage6 infrastructure on a high level.
+# v6-diagnostics
+This algorithm is part of the [vantage6](https://vantage6.ai) solution. This repository contains diagnostic tools for debugging and testing the vantage6 infrastructure on a high level.
 
 ## Usage
 ### Install
@@ -20,7 +20,8 @@ pip install .
 
 ### Execute
 ```bash
-vtest --host http://localhost --port 5000 --username *** --password ***
+vtest --host http://localhost --port 5000 --username *** --password *** \
+    --collaboration 1 [--online-only] [--organization 1] [--organization N]
 ```
 
 ```bash
@@ -28,8 +29,11 @@ python -i v6_diagnostic/cli.py [host] [port] [path] [username] [password]
 ```
 
 ````python
+>>> from vantage6.client import Client
+>>> client = Client('http://localhost', 5000, '***', '***')
 >>> from v6_diagnostic.cli import DiagnosticRunner
->>> runner = DiagnosticRunner('http://localhost', 5000, '***', '***')
+>>> runner = DiagnosticRunner(client, collaboration_id, organizations,
+...                           online_only)
 >>> runner()
 ````
 
