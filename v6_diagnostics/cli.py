@@ -45,7 +45,7 @@ class DiagnosticRunner:
 
     def __call__(self, base: bool = True, vpn: bool = True,
                  *args: Any, **kwds: Any) -> Any:
-        return self.vpn_features()
+        return self.base_features() + self.vpn_features()
 
     def base_features(self) -> None:
         task = self.client.task.create(
@@ -64,6 +64,8 @@ class DiagnosticRunner:
         print("\n")
         for res in result:
             self.display_diagnostic_results(res)
+
+        return result
 
     def vpn_features(self) -> None:
 
@@ -86,6 +88,8 @@ class DiagnosticRunner:
         print("\n")
         for res in result:
             self.display_diagnostic_results(res)
+
+        return result
 
     def display_diagnostic_results(self, result: dict) -> None:
         res = pickle.loads(result["result"])
