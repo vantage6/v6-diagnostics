@@ -1,4 +1,5 @@
-from vantage6.client.algorithm_client import AlgorithmClient
+from vantage6.algorithm.client import AlgorithmClient
+from vantage6.algorithm.tools.decorators import algorithm_client
 
 from v6_diagnostics.util import header, DiagnosticResult
 from v6_diagnostics.base_features import (  # noqa: F401
@@ -23,10 +24,21 @@ from v6_diagnostics.vpn import (  # noqa: F401
     RPC_wait
 )
 
+@algorithm_client
+def base_features(client: AlgorithmClient) -> list[DiagnosticResult]:
+    """
+    Run all tests for the base features of vantage6.
 
-def base_features(client: AlgorithmClient, *args, **kwargs) \
-        -> list[DiagnosticResult]:
-    """Run all diagnostics."""
+    Parameters
+    ----------
+    client : AlgorithmClient
+        The client to use for the diagnostics.
+
+    Returns
+    -------
+    list[DiagnosticResult]
+        The results of the diagnostics.
+    """
     header('Running base feature diagnostics')
     results = [
         diagnose_environment().json,
@@ -39,15 +51,15 @@ def base_features(client: AlgorithmClient, *args, **kwargs) \
         diagnose_local_proxy_subtask(client).json,
         diagnose_isolation().json,
         diagnose_external_port().json,
-        diagnose_database().json
     ]
-
-    print(results)
+    results.extend(
+        [diagnosis.json for diagnosis in diagnose_database()]
+    )
 
     return results
 
-
-def vpn_features(client: AlgorithmClient, _, other_nodes) \
+@algorithm_client
+def vpn_features(client: AlgorithmClient, other_nodes) \
         -> list[DiagnosticResult]:
     """Run all diagnostics."""
     header('Running VPN feature diagnostics')

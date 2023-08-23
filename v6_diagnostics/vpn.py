@@ -14,8 +14,8 @@ import traceback
 from typing import Any
 from time import sleep
 
-from vantage6.tools.util import info
-from vantage6.client.algorithm_client import AlgorithmClient
+from vantage6.algorithm.tools.util import info
+from vantage6.algorithm.client import AlgorithmClient
 
 from v6_diagnostics.util import header, DiagnosticResult
 
@@ -45,10 +45,10 @@ def echo(client: AlgorithmClient, other_nodes: list[int], **kwargs) \
         -> list[bool]:
     try:
         return try_echo(client, other_nodes)
-    except Exception as e:
+    except Exception as exc:
         info('Exception!')
         info(traceback.format_exc())
-        raise e
+        raise exc
 
 
 def try_echo(client: AlgorithmClient, other_nodes: list[int]) -> list[bool]:
@@ -57,8 +57,8 @@ def try_echo(client: AlgorithmClient, other_nodes: list[int]) -> list[bool]:
     # create a new task for all organizations in the collaboration.
     info(f"Dispatching node-tasks to organizations {other_nodes}")
     client.task.create(
-        input_={'method': 'echo'},
-        organization_ids=other_nodes
+        input_={'method': 'RPC_echo'},
+        organizations=other_nodes
     )
     info(f'Waiting {WAIT} seconds for the algorithm containers to boot up...')
     sleep(WAIT)
@@ -124,7 +124,7 @@ def _check_echo(host: str, port: int) -> bool:
         return response == MESSAGE
 
 
-def RPC_echo(data, *args, **kwargs):
+def RPC_echo(*args, **kwargs):
     """
     Start echo socket server
     """
@@ -132,7 +132,7 @@ def RPC_echo(data, *args, **kwargs):
     return
 
 
-def RPC_wait(data, *args, **kwargs):
+def RPC_wait(*args, **kwargs):
     try:
         sleep(10000)
     except KeyboardInterrupt:
