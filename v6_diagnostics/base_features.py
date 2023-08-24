@@ -66,6 +66,7 @@ def diagnose_environment() -> DiagnosticResult:
     """Diagnose the environment of the algorithm container."""
     header('Diagnose the environment of the algorithm container')
     diagnostic = DiagnosticResult('ENVIRONMENT', True, os.environ)
+    print(diagnostic)
     return diagnostic
 
 
@@ -76,10 +77,11 @@ def diagnose_input_file() -> DiagnosticResult:
         with open(os.environ['INPUT_FILE'], 'rb') as f:
             input_ = f.read()
         diagnostic = DiagnosticResult('INPUT_FILE', True, input_)
-        return diagnostic
     except Exception as exc:
         diagnostic = DiagnosticResult('INPUT_FILE', False, exception=exc)
-        return diagnostic
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_output_file() -> DiagnosticResult:
@@ -94,10 +96,11 @@ def diagnose_output_file() -> DiagnosticResult:
             success = f.read() == test_word
 
         diagnostic = DiagnosticResult('OUTPUT_FILE', success)
-        return diagnostic
-    except Exception as e:
-        diagnostic = DiagnosticResult('OUTPUT_FILE', False, exception=e)
-        return diagnostic
+    except Exception as exc:
+        diagnostic = DiagnosticResult('OUTPUT_FILE', False, exception=exc)
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_token_file() -> DiagnosticResult:
@@ -107,10 +110,11 @@ def diagnose_token_file() -> DiagnosticResult:
         with open(os.environ['TOKEN_FILE'], 'r') as f:
             token = f.read()
         diagnostic = DiagnosticResult('TOKEN_FILE', True, token)
-        return diagnostic
-    except Exception as e:
-        diagnostic = DiagnosticResult('TOKEN_FILE', False, exception=e)
-        return diagnostic
+    except Exception as exc:
+        diagnostic = DiagnosticResult('TOKEN_FILE', False, exception=exc)
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_temporary_volume() -> DiagnosticResult:
@@ -121,10 +125,11 @@ def diagnose_temporary_volume() -> DiagnosticResult:
         with open(temp_file, 'w') as f:
             f.write('test')
         diagnostic = DiagnosticResult('TEMPORARY_VOLUME', True)
-        return diagnostic
-    except Exception as e:
-        diagnostic = DiagnosticResult('TEMPORARY_VOLUME', False, exception=e)
-        return diagnostic
+    except Exception as exc:
+        diagnostic = DiagnosticResult('TEMPORARY_VOLUME', False, exception=exc)
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_temporary_volume_file_exists() -> DiagnosticResult:
@@ -135,11 +140,12 @@ def diagnose_temporary_volume_file_exists() -> DiagnosticResult:
         file_exists = Path(temp_file).exists()
         diagnostic = DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS',
                                       file_exists)
-        return diagnostic
-    except Exception as e:
+    except Exception as exc:
         diagnostic = DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS', False,
-                                      exception=e)
-        return diagnostic
+                                      exception=exc)
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_local_proxy() -> DiagnosticResult:
@@ -151,10 +157,11 @@ def diagnose_local_proxy() -> DiagnosticResult:
         response = requests.get(f'{host}:{port}/version')
         diagnostic = DiagnosticResult('LOCAL_PROXY',
                                       response.status_code == 200)
-        return diagnostic
     except Exception as exc:
         diagnostic = DiagnosticResult('LOCAL_PROXY', False, exception=exc)
-        return diagnostic
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_local_proxy_subtask(client: AlgorithmClient) -> DiagnosticResult:
@@ -184,10 +191,11 @@ def diagnose_local_proxy_subtask(client: AlgorithmClient) -> DiagnosticResult:
         result = client.wait_for_results(task.get('id'))
 
         diagnostic = DiagnosticResult('CREATE_SUBTASK', result)
-        return diagnostic
-    except Exception as e:
-        diagnostic = DiagnosticResult('CREATE_SUBTASK', False, exception=e)
-        return diagnostic
+    except Exception as exc:
+        diagnostic = DiagnosticResult('CREATE_SUBTASK', False, exception=exc)
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_local_proxy_subtask_stop(*_args, **_kwargs) -> bool:
@@ -201,15 +209,18 @@ def diagnose_isolation() -> DiagnosticResult:
         requests.get('https://google.nl')
     except ConnectionError:
         diagnostic = DiagnosticResult('ISOLATION', True)
+        print(diagnostic)
         return diagnostic
     except Exception as exc:
         # We could end up here by some other error. This does not necessary
         # mean that the algorithm is not isolated.
         diagnostic = DiagnosticResult('ISOLATION', False, exception=exc)
+        print(diagnostic)
         return diagnostic
 
     # If we get here, we have a connection to the internet
     diagnostic = DiagnosticResult('ISOLATION', False)
+    print(diagnostic)
     return diagnostic
 
 
@@ -246,12 +257,12 @@ def diagnose_external_port() -> DiagnosticResult:
 
         diagnostic = DiagnosticResult('EXTERNAL_PORT_TEST', all([p5, p8, pU]),
                                       payload=result)
-        return diagnostic
-
     except Exception as exc:
         diagnostic = DiagnosticResult('EXTERNAL_PORT_TEST', False,
                                       exception=exc)
-        return diagnostic
+
+    print(diagnostic)
+    return diagnostic
 
 
 def diagnose_database() -> list[DiagnosticResult]:
@@ -281,4 +292,7 @@ def diagnose_database() -> list[DiagnosticResult]:
     except Exception as exc:
         diagnostic = DiagnosticResult('DATABASE', False, exception=exc)
         diagnostics.append(diagnostic)
+
+    for diagnostic in diagnostics:
+        print(diagnostic)
     return diagnostics

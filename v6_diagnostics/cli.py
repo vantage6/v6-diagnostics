@@ -65,12 +65,23 @@ class DiagnosticRunner:
             organizations=self.organization_ids,
         )
 
-        result = self.client.wait_for_results(task_id=task.get("id"))
+        # TODO should we have the option to combine these in one request? Seems
+        # like it would be more efficient
+        # TODO ensure that we get all pages of results
+        results = self.client.wait_for_results(task_id=task.get("id"))['data']
+        runs = self.client.run.from_task(task_id=task.get("id"))['data']
         print("\n")
-        for res in result['data']:
+        for res in results:
+            matched_run = [
+                run for run in runs if run['id'] == res['run']['id']
+            ][0]
+            print(
+                f"Results for organization {matched_run['organization']['id']}"
+            )
             self.display_diagnostic_results(res)
+            print()
 
-        return result
+        return results
 
     def vpn_features(self) -> dict:
 
@@ -96,7 +107,6 @@ class DiagnosticRunner:
         return result
 
     def display_diagnostic_results(self, result: dict) -> None:
-        print("we are here!")
         res = json.loads(result["result"])
         t_ = Table(title="Basic Diagnostics Summary")
         t_.add_column('name')
