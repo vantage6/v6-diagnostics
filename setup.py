@@ -29,7 +29,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'vtest=v6_diagnostics.cli:feature_tester',
+            'vtest=cli.cli:feature_tester',
         ],
     },
 )
