@@ -3,10 +3,23 @@ import sys
 
 from vantage6.client import UserClient
 from vantage6.algorithm.tools.util import error
+from vantage6.cli.dev import (
+    create_demo_network, start_demo_network, stop_demo_network,
+    remove_demo_network
+)
+from vantage6.cli.server import get_server_context
+from vantage6.cli.utils import prompt_config_name, check_config_name_allowed
 
 from cli.diagnostic_runner import DiagnosticRunner
 
-@click.command(name="feature-tester")
+@click.group(name="test")
+def cli_test() -> None:
+    """
+    The `vtest` commands allow you to run diagnostic tests on your vantage6
+    environment.
+    """
+
+@cli_test.command(name="run-test-algorithm")
 @click.option("--host", type=str, default="http://localhost",
               help="URL of the server")
 @click.option("--port", type=int, default=5000, help="Port of the server")
@@ -30,7 +43,7 @@ def feature_tester(
     online_only: bool
 ) -> list[dict]:
     """
-    Run diagnostic checks on a vantage6 network.
+    Run diagnostic checks on an existing vantage6 network.
 
     This command will create a task in the requested collaboration that will
     test the functionality of vantage6, and will report back the results.
@@ -50,3 +63,54 @@ def feature_tester(
                                 online_only)
     res = diagnose(base=False)
     return res
+
+
+@cli_test.command(name="run-integration-test")
+@click.option('-n', '--name', default=None, type=str,
+              help="Name for your development setup")
+@click.option('--server-url', type=str, default='http://host.docker.internal',
+              help='Server URL to point to. If you are using Docker Desktop, '
+              'the default http://host.docker.internal should not be changed.')
+@click.option('-i', '--image', type=str, default=None,
+              help='Server Docker image to use')
+@click.pass_context
+def run_integration_test(ctx: click.Context, name: str, server_url: str,
+                         image: str) -> list[dict]:
+    """
+    Create development network and run diagnostic checks on it.
+
+    This is a full integration test of the vantage6 network. It will create
+    a test server with some nodes using the `vdev` commands, and then run the
+    v6-diagnostics algorithm to test all functionality.
+    """
+    # get name for the development setup - if not given - and check if it is
+    # allowed
+    name = prompt_config_name(name)
+    check_config_name_allowed(name)
+
+    # create server & node configurations and create test resources (
+    # collaborations, organizations, etc)
+    ctx.invoke(create_demo_network, name=name, num_nodes=3,
+               server_url=server_url, server_port=5000, image=image)
+    # TODO we need to wait here for the vserver import to finish -> while that
+    # container is running, it continues here and fails
+
+    # get server context object which is need for the other vdev functionality
+    server_ctx = get_server_context(name=name, system_folders=True)
+
+    # start the server and nodes
+    ctx.invoke(start_demo_network, ctx=server_ctx, server_image=image,
+               node_image=image)
+
+    # run the diagnostic tests
+    diagnose_results = ctx.invoke(
+        feature_tester, host=server_url, port=5000, api_path='/api',
+        username='root', password='root', collaboration=1, organization=[],
+        all_nodes=True, online_only=False
+    )
+
+    # clean up the test resources
+    ctx.invoke(stop_demo_network, ctx=server_ctx)
+    ctx.invoke(remove_demo_network, ctx=server_ctx)
+
+    return diagnose_results
