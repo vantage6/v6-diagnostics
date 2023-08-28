@@ -74,7 +74,7 @@ def feature_tester(
 @click.option('-i', '--image', type=str, default=None,
               help='Server Docker image to use')
 @click.pass_context
-def run_integration_test(ctx: click.Context, name: str, server_url: str,
+def run_integration_test(click_ctx: click.Context, name: str, server_url: str,
                          image: str) -> list[dict]:
     """
     Create development network and run diagnostic checks on it.
@@ -90,27 +90,28 @@ def run_integration_test(ctx: click.Context, name: str, server_url: str,
 
     # create server & node configurations and create test resources (
     # collaborations, organizations, etc)
-    ctx.invoke(create_demo_network, name=name, num_nodes=3,
-               server_url=server_url, server_port=5000, image=image)
-    # TODO we need to wait here for the vserver import to finish -> while that
-    # container is running, it continues here and fails
-
-    # get server context object which is need for the other vdev functionality
-    server_ctx = get_server_context(name=name, system_folders=True)
+    click_ctx.invoke(
+        create_demo_network, name=name, num_nodes=3, server_url=server_url,
+        server_port=5000, image=image
+    )
 
     # start the server and nodes
-    ctx.invoke(start_demo_network, ctx=server_ctx, server_image=image,
-               node_image=image)
+    click_ctx.invoke(
+        start_demo_network, name=name, system_folders=True, server_image=image,
+        node_image=image
+    )
 
     # run the diagnostic tests
-    diagnose_results = ctx.invoke(
-        feature_tester, host=server_url, port=5000, api_path='/api',
-        username='root', password='root', collaboration=1, organization=[],
-        all_nodes=True, online_only=False
+    # TODO the username and password should be coordinated with the vdev
+    # command
+    diagnose_results = click_ctx.invoke(
+        feature_tester, host="http://localhost", port=5000, api_path='/api',
+        username='org_1-admin', password='password', collaboration=1,
+        organization=[], all_nodes=True, online_only=False
     )
 
     # clean up the test resources
-    ctx.invoke(stop_demo_network, ctx=server_ctx)
-    ctx.invoke(remove_demo_network, ctx=server_ctx)
+    click_ctx.invoke(stop_demo_network, name=name, system_folders=True)
+    click_ctx.invoke(remove_demo_network, name=name, system_folders=True)
 
     return diagnose_results
