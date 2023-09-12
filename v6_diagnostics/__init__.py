@@ -24,6 +24,7 @@ from v6_diagnostics.vpn import (  # noqa: F401
     RPC_wait
 )
 
+
 @algorithm_client
 def base_features(client: AlgorithmClient) -> list[DiagnosticResult]:
     """
@@ -57,6 +58,7 @@ def base_features(client: AlgorithmClient) -> list[DiagnosticResult]:
     )
 
     return results
+
 
 @algorithm_client
 def vpn_features(client: AlgorithmClient, other_nodes) \
