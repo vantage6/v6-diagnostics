@@ -20,8 +20,9 @@ pip install .
 
 ### Execute
 ```bash
-vtest --host http://localhost --port 5000 --username *** --password *** \
-    --collaboration 1 [--online-only] [--organization 1] [--organization N]
+vtest run-test-algorithm --host http://localhost --port 5000 --username *** \
+  --password *** --collaboration 1 [--online-only] [--organization 1] \
+  [--organization N]
 ```
 
 ```bash
