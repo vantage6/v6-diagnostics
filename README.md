@@ -13,7 +13,7 @@ This algorithm is part of the [vantage6](https://vantage6.ai) solution. This rep
 ## Usage
 ### Install
 ```bash
-git clone https://github.com/vantage6/v6-diagnostic.git
+git clone https://github.com/vantage6/v6-diagnostics.git
 cd v6-diagnostic
 pip install .
 ```
