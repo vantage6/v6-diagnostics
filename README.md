@@ -31,7 +31,7 @@ python -i v6_diagnostic/cli.py [host] [port] [path] [username] [password]
 ````python
 >>> from vantage6.client import Client
 >>> client = Client('http://localhost', 5000, '***', '***')
->>> from v6_diagnostic.cli import DiagnosticRunner
+>>> from v6_diagnostics.cli import DiagnosticRunner
 >>> runner = DiagnosticRunner(client, collaboration_id, organizations,
 ...                           online_only)
 >>> runner()
