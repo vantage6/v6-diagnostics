@@ -5,11 +5,12 @@ from rich.console import Console
 from rich.table import Table
 
 from vantage6.client import UserClient
-from vantage6.algorithm.tools.util import info
+from vantage6.common import info, debug
 
-IMAGE_NAME = "harbor2.vantage6.ai/algorithms/diagnostic"
+IMAGE_NAME = "harbor2.vantage6.ai/algorithms/diagnostic:v4"
 # TODO remove
-IMAGE_NAME = "test-diagnostic"
+# IMAGE_NAME = "test-diagnostic"
+
 
 class DiagnosticRunner:
 
@@ -32,10 +33,10 @@ class DiagnosticRunner:
         if online_only:
             nodes = self.client.node.list(
                 collaboration=self.collaboration_id,
-                is_online=True, include_metadata=False
+                is_online=True
             )
-            info(nodes)
-            online_orgs = [node['organization']['id'] for node in nodes]
+            debug(nodes)
+            online_orgs = [node['organization']['id'] for node in nodes['data']]
             self.organization_ids = \
                 list(set(self.organization_ids).intersection(online_orgs))
 
@@ -59,7 +60,11 @@ class DiagnosticRunner:
                 "method": "base_features",
             },
             organizations=self.organization_ids,
+            databases=[
+                {'label': 'default'}
+            ]
         )
+        debug(task)
 
         return self._wait_and_display(task.get("id"))
 
