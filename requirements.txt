@@ -1,5 +1,5 @@
-vantage6-algorithm-tools==4.0.0a5
-vantage6-client==4.0.0a5
+vantage6-algorithm-tools
+vantage6-client
 requests
 pyjwt
 rich

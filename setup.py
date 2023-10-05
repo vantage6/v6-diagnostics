@@ -20,8 +20,8 @@ setup(
     packages=find_packages(),
     python_requires='>=3.6',
     install_requires=[
-        'vantage6-client==4.0.0a5',
-        'vantage6-algorithm-tools==4.0.0a5',
+        'vantage6-client',
+        'vantage6-algorithm-tools',
         'requests',
         'pyjwt',
         'rich',
