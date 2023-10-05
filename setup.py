@@ -20,7 +20,8 @@ setup(
     packages=find_packages(),
     python_requires='>=3.6',
     install_requires=[
-        'vantage6-client==3.8.8',
+        'vantage6-client',
+        'vantage6-algorithm-tools',
         'requests',
         'pyjwt',
         'rich',
@@ -28,7 +29,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'vtest=v6_diagnostics.cli:feature_tester',
+            'vtest=cli.test:cli_test',
         ],
     },
 )
