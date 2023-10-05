@@ -8,14 +8,8 @@ ARG PKG_NAME="v6_diagnostics"
 RUN apt update && apt install -y iproute2 traceroute iputils-ping curl
 
 # install federated algorithm
-COPY ./algorithms/v6-diagnostics/ /app
+COPY . /app
 RUN pip install /app
-
-# TODO remove this later on! and update the COPY line above
-COPY ./vantage6-main /vantage6
-RUN pip install /vantage6/vantage6-common
-RUN pip install /vantage6/vantage6-client
-RUN pip install /vantage6/vantage6-algorithm-tools
 
 ENV PKG_NAME=${PKG_NAME}
 
