@@ -3,11 +3,7 @@ import sys
 
 from vantage6.client import UserClient
 from vantage6.algorithm.tools.util import error
-from vantage6.cli.dev import (
-    create_demo_network, start_demo_network, stop_demo_network,
-    remove_demo_network
-)
-from vantage6.cli.server import get_server_context
+from vantage6.cli.dev import create, start, stop, remove
 from vantage6.cli.utils import prompt_config_name, check_config_name_allowed
 
 from cli.diagnostic_runner import DiagnosticRunner
