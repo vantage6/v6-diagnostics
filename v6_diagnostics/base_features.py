@@ -52,14 +52,13 @@ does not use any wrapper functions. The following features are tested:
 import os
 import requests
 import jwt
-import time
 
 from pathlib import Path
 
 from requests.exceptions import ConnectionError
 from vantage6.algorithm.client import AlgorithmClient
 
-from v6_diagnostics.util import DiagnosticResult, header
+from v6_diagnostics.util import DiagnosticResult, header, get_env_var
 
 
 def diagnose_environment() -> DiagnosticResult:
@@ -74,7 +73,7 @@ def diagnose_input_file() -> DiagnosticResult:
     """Diagnose the input file."""
     header('Diagnose the input file')
     try:
-        with open(os.environ['INPUT_FILE'], 'rb') as f:
+        with open(get_env_var('INPUT_FILE'), 'rb') as f:
             input_ = f.read()
         diagnostic = DiagnosticResult('INPUT_FILE', True, input_)
     except Exception as exc:
@@ -89,10 +88,10 @@ def diagnose_output_file() -> DiagnosticResult:
     header('Diagnose the output file')
     test_word = 'test'
     try:
-        with open(os.environ['OUTPUT_FILE'], 'w') as f:
+        with open(get_env_var('OUTPUT_FILE'), 'w') as f:
             f.write(test_word)
 
-        with open(os.environ['OUTPUT_FILE'], 'r') as f:
+        with open(get_env_var('OUTPUT_FILE'), 'r') as f:
             success = f.read() == test_word
 
         diagnostic = DiagnosticResult('OUTPUT_FILE', success)
@@ -107,7 +106,7 @@ def diagnose_token_file() -> DiagnosticResult:
     """Diagnose the token file."""
     header('Diagnose the token file')
     try:
-        with open(os.environ['TOKEN_FILE'], 'r') as f:
+        with open(get_env_var('TOKEN_FILE'), 'r') as f:
             token = f.read()
         diagnostic = DiagnosticResult('TOKEN_FILE', True, token)
     except Exception as exc:
@@ -121,7 +120,7 @@ def diagnose_temporary_volume() -> DiagnosticResult:
     """Diagnose the temporary volume."""
     header('Diagnose writing to temporary volume')
     try:
-        temp_file = Path(os.environ["TEMPORARY_FOLDER"]) / 'test.txt'
+        temp_file = Path(get_env_var("TEMPORARY_FOLDER")) / 'test.txt'
         with open(temp_file, 'w') as f:
             f.write('test')
         diagnostic = DiagnosticResult('TEMPORARY_VOLUME', True)
@@ -136,7 +135,7 @@ def diagnose_temporary_volume_file_exists() -> DiagnosticResult:
     """Diagnose the temporary volume."""
     header('Diagnose that the temporary file is created')
     try:
-        temp_file = Path(os.environ["TEMPORARY_FOLDER"]) / 'test.txt'
+        temp_file = Path(get_env_var("TEMPORARY_FOLDER")) / 'test.txt'
         file_exists = Path(temp_file).exists()
         diagnostic = DiagnosticResult('TEMPORARY_VOLUME_FILE_EXISTS',
                                       file_exists)
@@ -152,8 +151,8 @@ def diagnose_local_proxy() -> DiagnosticResult:
     """Diagnose the local proxy."""
     header('Diagnose the local proxy')
     try:
-        host = os.environ['HOST']
-        port = os.environ['PORT']
+        host = get_env_var('HOST')
+        port = get_env_var('PORT')
         response = requests.get(f'{host}:{port}/version')
         diagnostic = DiagnosticResult('LOCAL_PROXY',
                                       response.status_code == 200)
@@ -169,7 +168,7 @@ def diagnose_local_proxy_subtask(client: AlgorithmClient) -> DiagnosticResult:
     header('Diagnose the local proxy subtask')
     try:
 
-        with open(os.environ['TOKEN_FILE'], 'r') as f:
+        with open(get_env_var('TOKEN_FILE'), 'r') as f:
             token = f.read()
 
         identity = (
@@ -228,11 +227,11 @@ def diagnose_external_port() -> DiagnosticResult:
     """Diagnose the external port."""
     header('Diagnose the external port')
     try:
-        with open(os.environ['TOKEN_FILE'], 'r') as f:
+        with open(get_env_var('TOKEN_FILE'), 'r') as f:
             token = f.read()
 
-        host = os.environ['HOST']
-        port = os.environ['PORT']
+        host = get_env_var('HOST')
+        port = get_env_var('PORT')
 
         # port should be published as we are running this code.. So no
         # need for polling
@@ -270,10 +269,10 @@ def diagnose_database() -> list[DiagnosticResult]:
     header('Diagnose the file-based database')
     diagnostics = []
     try:
-        db_labels = os.environ['DB_LABELS'].split(',')
+        db_labels = get_env_var('DB_LABELS').split(',')
         for label in db_labels:
-            db_uri = os.environ[f'{label.upper()}_DATABASE_URI']
-            db_type = os.environ[f'{label.upper()}_DATABASE_TYPE']
+            db_uri = get_env_var(f'{label.upper()}_DATABASE_URI')
+            db_type = get_env_var(f'{label.upper()}_DATABASE_TYPE')
 
             if db_type in ['sql', 'omop', 'sparql']:
                 # We do not expect these databases to be files, so don't
