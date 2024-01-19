@@ -8,8 +8,6 @@ from vantage6.client import UserClient
 from vantage6.common import info, debug
 
 IMAGE_NAME = "harbor2.vantage6.ai/algorithms/diagnostic:v4"
-# TODO remove
-# IMAGE_NAME = "test-diagnostic"
 
 
 class DiagnosticRunner:
