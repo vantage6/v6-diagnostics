@@ -1,15 +1,20 @@
 # basic python3 image as base
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:22.11.1-alpine
 
 # This is a placeholder that should be overloaded by invoking
 # docker build with '--build-arg PKG_NAME=...'
 ARG PKG_NAME="v6_diagnostics"
 ENV PKG_NAME=${PKG_NAME}
 
-RUN apt update && apt install -y iproute2 traceroute iputils-ping curl
+ENV PATH="/opt/conda/envs/py310/bin/:${PATH}"
 
 # install federated algorithm
 COPY . /app
+
+RUN apk add libssl1.1
+
+RUN conda create -n py310 python=3.10
+
 RUN pip install /app
 
 
