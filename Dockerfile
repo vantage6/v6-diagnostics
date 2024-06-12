@@ -1,5 +1,5 @@
 # basic python3 image as base
-FROM continuumio/miniconda3:22.11.1-alpine
+FROM continuumio/miniconda3
 
 # This is a placeholder that should be overloaded by invoking
 # docker build with '--build-arg PKG_NAME=...'
@@ -18,7 +18,10 @@ LABEL p5555="port5"
 # install federated algorithm
 COPY . /app
 
-RUN apk add libssl1.1
+RUN apt update
+
+RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+RUN dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
 
 RUN conda create -n py310 python=3.10
 
