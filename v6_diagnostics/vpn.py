@@ -7,6 +7,7 @@ node just the same as any other method.
 When a return statement is reached the result is send to the central
 server after encryption.
 """
+
 import socket
 import asyncio
 import traceback
@@ -56,56 +57,49 @@ def try_echo(client: AlgorithmClient, other_nodes: list[int]) -> list[bool]:
     info("Defining input parameters")
     # create a new task for all organizations in the collaboration.
     info(f"Dispatching node-tasks to organizations {other_nodes}")
-    client.task.create(
-        input_={'method': 'RPC_echo'},
-        organizations=other_nodes
+    subtask = client.task.create(
+        input_={"method": "RPC_echo"}, organizations=other_nodes
     )
-    info(f'Waiting {WAIT} seconds for the algorithm containers to boot up...')
+    info(f"Waiting {WAIT} seconds for the algorithm containers to boot up...")
     sleep(WAIT)
 
     # Ip address and port of algorithm can be found in results model
     n_nodes = len(other_nodes)
-    addresses = _await_port_numbers(client, num_nodes=n_nodes)
+    addresses = _await_port_numbers(client, num_nodes=n_nodes, subtask=subtask["id"])
     succeeded_echos = []
-    info(f'Echoing to {len(addresses)} algorithms...')
+    info(f"Echoing to {len(addresses)} algorithms...")
 
     for a in addresses:
-        ip = a['ip']
-        port = a['port']
-        info(f'Sending message to {ip}:{port}')
+        ip = a["ip"]
+        port = a["port"]
+        info(f"Sending message to {ip}:{port}")
 
         try:
             succeeded_echos.append(_check_echo(ip, port))
         except socket.timeout:
-            info('Timeout! Skipping to next address.')
+            info("Timeout! Skipping to next address.")
 
-    info(f'Succeeded echos: {succeeded_echos}')
+    info(f"Succeeded echos: {succeeded_echos}")
     return succeeded_echos
 
 
-def _await_port_numbers(client: AlgorithmClient, num_nodes: int) \
-        -> list[dict[str, Any]]:
-    # TODO: client.vpn.get_addresses does not support the only_children
-    # parameter yet. This is a temporary workaround.
-    # results = client.vpn.get_addresses(only_children=True)
-    results = client.request("vpn/algorithm/addresses", params={
-        "only_children": True
-    })['addresses']
+def _await_port_numbers(
+    client: AlgorithmClient, num_nodes: int, subtask: int
+) -> list[dict[str, Any]]:
+
+    results = get_vpn_addresses(client, subtask)
+
+    
+    info(f"Addresses: {results}")
     attempts = 0
     while len(results) < num_nodes:
         if attempts >= RETRY:
-            info('Cannot contact all organizations!')
+            info("Cannot contact all organizations!")
             break
 
-        info('Polling results for port numbers...')
-        # TODO: client.vpn.get_addresses does not support the only_children
-        # parameter yet. This is a temporary workaround.
-        results = client.request("vpn/algorithm/addresses", params={
-            "only_children": True
-        })['addresses']
-
-        # results = client.vpn.get_addresses()
-        info(str(results))
+        info("Polling results for port numbers...")
+        results = get_vpn_addresses(client, subtask)
+        info(results)
         attempts += 1
         sleep(4)
 
@@ -113,8 +107,14 @@ def _await_port_numbers(client: AlgorithmClient, num_nodes: int) \
     return results
 
 
+def get_vpn_addresses(client, subtask):
+    results = client.vpn.get_addresses(only_children=True, label="port8")
+
+    return [r for r in results if r["task_id"] == subtask]
+
+
 def _check_echo(host: str, port: int) -> bool:
-    info(f'Checking echo on {host}:{port}')
+    info(f"Checking echo on {host}:{port}")
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(TIMEOUT)
