@@ -32,17 +32,6 @@ does not use any wrapper functions. The following features are tested:
         Checks if the algorithm container is isolated such that it can not
         reach the internet. It tests this by trying to reach google.nl, so make
         sure this is not a whitelisted domain when testing.
-    External port test
-        Check that the algorithm can find its own ports. Algorithms can
-        request a dedicated port for communication with other algorithm
-        containers. The port that they require is stored in the Dockerfile
-        using the ``EXPORT`` and ``LABEL`` keywords. For example:
-        ```Dockefile
-        LABEL p8888="port8"
-        EXPOSE 8888
-        ```
-        It however does not check that the application is actually listening
-        on the port.
     Database readable
         Check if the file-based database is readable.
 """

@@ -19,31 +19,17 @@ pip install .
 ```
 
 ### Execute
-```bash
-vtest run-test-algorithm --host http://localhost --port 5000 --username *** \
-  --password *** --collaboration 1 [--online-only] [--organization 1] \
-  [--organization N]
-```
+
+Follow instructions in the CLI:
 
 ```bash
-python -i v6_diagnostic/cli.py [host] [port] [path] [username] [password]
+v6 test --help
 ```
 
-````python
->>> from vantage6.client import Client
->>> client = Client('http://localhost', 5000, '***', '***')
->>> from v6_diagnostics.cli import DiagnosticRunner
->>> runner = DiagnosticRunner(client, collaboration_id, organizations,
-...                           online_only)
->>> runner()
-````
+See the [vantage6 documentation](https://docs.vantage6.ai/) for more information on how
+to use the CLI.
 
-## Build
-
-### Package
-```bash
-python setup.py sdist bdist_wheel
-```
+The ``v6 test integration-test`` command and ``v6 test feature-test`` command will run this algorithm.
 
 ### Docker image
 ```bash

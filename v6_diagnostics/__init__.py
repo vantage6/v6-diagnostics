@@ -1,5 +1,9 @@
+from vantage6.algorithm.decorator.algorithm_client import algorithm_client
+from vantage6.algorithm.decorator.action import central
 from vantage6.algorithm.client import AlgorithmClient
-from vantage6.algorithm.tools.decorators import algorithm_client
+
+# use default infra implementation of read_csv
+from vantage6.algorithm.data_extraction import read_csv  # noqa: F401
 
 from v6_diagnostics.util import header, DiagnosticResult
 from v6_diagnostics.base_features import (  # noqa: F401
@@ -18,6 +22,7 @@ from v6_diagnostics.base_features import (  # noqa: F401
 )
 
 
+@central
 @algorithm_client
 def base_features(client: AlgorithmClient) -> list[DiagnosticResult]:
     """

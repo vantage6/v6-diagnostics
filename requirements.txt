@@ -1,6 +1,0 @@
-vantage6-algorithm-tools
-vantage6-client
-requests
-pyjwt
-rich
-click
