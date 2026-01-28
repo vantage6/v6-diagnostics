@@ -10,9 +10,7 @@ from v6_diagnostics.base_features import (  # noqa: F401
     diagnose_environment,
     diagnose_input_file,
     diagnose_output_file,
-    diagnose_token_file,
-    diagnose_temporary_volume,
-    diagnose_temporary_volume_file_exists,
+    diagnose_token,
     diagnose_local_proxy,
     diagnose_local_proxy_subtask,
     # child task runs this, so we need to keep the import here
@@ -43,13 +41,11 @@ def base_features(client: AlgorithmClient) -> list[DiagnosticResult]:
         diagnose_environment().json,
         diagnose_input_file().json,
         diagnose_output_file().json,
-        diagnose_token_file().json,
-        diagnose_temporary_volume().json,
-        diagnose_temporary_volume_file_exists().json,
+        diagnose_token().json,
         diagnose_local_proxy().json,
         diagnose_local_proxy_subtask(client).json,
         diagnose_isolation().json,
+        diagnose_database().json,
     ]
-    results.extend([diagnosis.json for diagnosis in diagnose_database()])
 
     return results

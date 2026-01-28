@@ -1,5 +1,5 @@
 IMAGE_NAME := harbor2.vantage6.ai/algorithms/diagnostic
-TAG := latest
+TAG := uluru
 
 help:
 	@echo "publish           -  build and push docker image to registry"
