@@ -168,7 +168,6 @@ def diagnose_local_proxy_subtask(client: AlgorithmClient) -> DiagnosticResult:
     """Diagnose the local proxy."""
     header("Diagnose the local proxy subtask")
     try:
-
         with open(get_env_var("TOKEN_FILE"), "r") as f:
             token = f.read()
 
@@ -215,47 +214,6 @@ def diagnose_isolation() -> DiagnosticResult:
 
     # If we get here, we have a connection to the internet
     diagnostic = DiagnosticResult("ISOLATION", False)
-    print(diagnostic)
-    return diagnostic
-
-
-def diagnose_external_port() -> DiagnosticResult:
-    """Diagnose the external port."""
-    header("Diagnose the external port")
-    try:
-        with open(get_env_var("TOKEN_FILE"), "r") as f:
-            token = f.read()
-
-        host = get_env_var("HOST")
-        port = get_env_var("PORT")
-
-        # port should be published as we are running this code.. So no
-        # need for polling
-        response = requests.get(
-            f"{host}:{port}/vpn/algorithm/addresses",
-            headers={"Authorization": "Bearer " + token},
-            params={"include_parent": True, "include_children": True},
-        )
-
-        # we also assume that only a single task has been posted as we
-        # are not testing the connectivity between nodes yet
-        p5 = p8 = False
-        pU = True
-        result = response.json()
-        for addr in result["addresses"]:
-            if addr["label"] == "port5":
-                p5 = True
-            elif addr["label"] == "port8":
-                p8 = True
-            else:
-                pU = False
-
-        diagnostic = DiagnosticResult(
-            "EXTERNAL_PORT_TEST", all([p5, p8, pU]), payload=result
-        )
-    except Exception as exc:
-        diagnostic = DiagnosticResult("EXTERNAL_PORT_TEST", False, exception=exc)
-
     print(diagnostic)
     return diagnostic
 
