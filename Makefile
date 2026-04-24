@@ -1,4 +1,4 @@
-IMAGE_NAME := "harbor2.vantage6.ai/algorithms/diagnostic"
+IMAGE_NAME := "ghcr.io/vantage6/algorithm/diagnostic"
 
 help:
 	@echo "publish           -  build and push docker image to registry"
