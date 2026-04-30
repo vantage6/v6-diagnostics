@@ -7,37 +7,36 @@ on:
 jobs:
   docker-push:
     env:
-      IMAGE_NAME: "harbor2.vantage6.ai/algorithms/diagnostic"
-      HARBOR_SERVER: "harbor2.vantage6.ai"
+      IMAGE_NAME: "ghcr.io/vantage6/algorithm/diagnostic"
+      REGISTRY: "ghcr.io"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        pip install .
-    - name: Get vantage6-client version
-      run: |
-        V6_VERSION=$(pip list --format=freeze|grep vantage6-client|sed -e 's/[^=]*==\(.*\)/\1/')
-        echo V6_TAG=$V6_VERSION >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          pip install .
+      - name: Get vantage6-client version
+        run: |
+          V6_VERSION=$(pip list --format=freeze|grep vantage6-client|sed -e 's/[^=]*==\(.*\)/\1/')
+          echo V6_TAG=$V6_VERSION >> $GITHUB_ENV
 
-    - name: Docker Login
-      uses: docker/login-action@v1.10.0
-      with:
-        registry: ${{env.HARBOR_SERVER}}
-        username: ${{secrets.HARBOR_USER}}
-        password: ${{secrets.HARBOR_PASSWORD}}
+      - name: Docker Login
+        # pinned to: https://github.com/docker/login-action/releases/tag/v4.1.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
+        with:
+          registry: ${{env.REGISTRY}}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
 
-    - name: Build the Docker image
-      run: |
-        docker build . --file Dockerfile --tag ${{env.IMAGE_NAME}}
-        docker tag ${{env.IMAGE_NAME}} ${{env.IMAGE_NAME}}:${{env.V6_TAG}}
+      - name: Build the Docker image
+        run: |
+          docker build . --file Dockerfile --tag ${{env.IMAGE_NAME}}
+          docker tag ${{env.IMAGE_NAME}} ${{env.IMAGE_NAME}}:${{env.V6_TAG}}
 
-    - name: Push the Docker images
-      run: |
-        docker push ${{env.IMAGE_NAME}}
-        docker push ${{env.IMAGE_NAME}}:${{env.V6_TAG}}
-
-
+      - name: Push the Docker images
+        run: |
+          docker push ${{env.IMAGE_NAME}}
+          docker push ${{env.IMAGE_NAME}}:${{env.V6_TAG}}
