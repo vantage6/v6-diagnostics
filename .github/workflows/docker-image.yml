@@ -18,10 +18,14 @@ jobs:
       - name: Install dependencies
         run: |
           pip install .
-      - name: Get vantage6-client version
+      - name: Get vantage6 version tag
         run: |
-          V6_VERSION=$(pip list --format=freeze|grep vantage6-client|sed -e 's/[^=]*==\(.*\)/\1/')
-          echo V6_TAG=$V6_VERSION >> $GITHUB_ENV
+          V6_VERSION=$(python -c "from vantage6.common import __version__; print(__version__)")
+          if [ -z "$V6_VERSION" ]; then
+            echo "Could not determine vantage6 version for Docker tag"
+            exit 1
+          fi
+          echo "V6_TAG=$V6_VERSION" >> $GITHUB_ENV
 
       - name: Docker Login
         # pinned to: https://github.com/docker/login-action/releases/tag/v4.1.0
