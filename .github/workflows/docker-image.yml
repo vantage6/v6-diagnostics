@@ -24,7 +24,8 @@ jobs:
           echo V6_TAG=$V6_VERSION >> $GITHUB_ENV
 
       - name: Docker Login
-        uses: docker/login-action@v1.10.0
+        # pinned to: https://github.com/docker/login-action/releases/tag/v4.1.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
         with:
           registry: ${{env.REGISTRY}}
           username: ${{ github.actor }}
