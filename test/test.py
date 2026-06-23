@@ -116,6 +116,52 @@ def test_diagnose_session_folder(tmp_path, monkeypatch):
     assert (tmp_path / "v6_diagnostics_test.txt").exists()
 
 
+def test_diagnose_dataframe_readable(tmp_path, monkeypatch):
+    """Session dataframe probe should read parquet files from the session folder."""
+    df = pd.DataFrame({"a": [1, 2]})
+    df.to_parquet(tmp_path / "test-df.parquet")
+    monkeypatch.setenv("SESSION_FOLDER", str(tmp_path))
+    monkeypatch.setenv("USER_REQUESTED_DATAFRAMES", "test-df")
+
+    result = bf.diagnose_dataframe_readable()
+    assert result.success is True
+    assert result.payload == [{"label": "test-df", "shape": (2, 1)}]
+
+
+def test_base_features():
+    """Central diagnostics should complete when a session dataframe is available."""
+    network = MockNetwork(
+        datasets=[{DATABASE_LABEL: {"database": pd.DataFrame({"a": [1]})}}],
+        module_name="v6_diagnostics",
+    )
+    client = network.user_client
+    org_ids = [org["id"] for org in client.organization.list()]
+    databases = [{"type": "dataframe", "dataframe_id": network.hq.dataframes[0]["id"]}]
+
+    task = client.task.create(
+        method="base_features",
+        arguments={},
+        organizations=[org_ids[0]],
+        databases=databases,
+    )
+    results = client.wait_for_results(task.get("id"))
+    assert results
+    diagnostics = results[0]
+    assert len(diagnostics) == 10
+    assert {diag["name"] for diag in diagnostics} == {
+        "ENVIRONMENT",
+        "INPUT_FILE",
+        "OUTPUT_FILE",
+        "CONTAINER_TOKEN",
+        "LOCAL_PROXY",
+        "CREATE_SUBTASK",
+        "ISOLATION",
+        "SESSION_FOLDER",
+        "DATAFRAME_READABLE",
+        "DATAFRAME ENV VARS",
+    }
+
+
 def test_diagnose_database(monkeypatch):
     monkeypatch.setenv(
         "USER_REQUESTED_DATAFRAMES",

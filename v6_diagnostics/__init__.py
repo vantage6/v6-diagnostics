@@ -17,8 +17,8 @@ from v6_diagnostics.base_features import (  # noqa: F401
     diagnose_local_proxy_subtask_stop,
     diagnose_isolation,
     diagnose_session_folder,
-    diagnose_database,
     diagnose_dataframe_readable,
+    diagnose_database,
 )
 
 

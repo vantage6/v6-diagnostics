@@ -47,6 +47,11 @@ import pandas as pd
 import requests
 from requests.exceptions import ConnectionError
 
+from vantage6.common.globals import (
+    DATAFRAME_BETWEEN_GROUPS_SEPARATOR,
+    DATAFRAME_WITHIN_GROUP_SEPARATOR,
+)
+
 from vantage6.algorithm.client import AlgorithmClient
 from vantage6.algorithm.decorator.action import federated
 from vantage6.algorithm.tools.util import get_env_var
@@ -193,9 +198,29 @@ def diagnose_session_folder() -> DiagnosticResult:
     return diagnostic
 
 
-def diagnose_dataframe_readable(df: pd.DataFrame) -> dict:
-    """Verify that a session dataframe is readable at a data station."""
-    return DiagnosticResult("DATAFRAME_READABLE", True, df.shape)
+def diagnose_dataframe_readable() -> DiagnosticResult:
+    """Verify that requested session dataframe(s) can be read from disk."""
+    header("Diagnose session dataframe readability")
+    try:
+        dfs = get_env_var("USER_REQUESTED_DATAFRAMES")
+        if not dfs:
+            raise ValueError("No session dataframes were requested for this task")
+
+        session_folder = Path(get_env_var("SESSION_FOLDER"))
+        labels = dfs.split(DATAFRAME_BETWEEN_GROUPS_SEPARATOR)[0].split(
+            DATAFRAME_WITHIN_GROUP_SEPARATOR
+        )
+        readable = []
+        for label in labels:
+            df = pd.read_parquet(session_folder / f"{label}.parquet")
+            readable.append({"label": label, "shape": df.shape})
+
+        diagnostic = DiagnosticResult("DATAFRAME_READABLE", True, readable)
+    except Exception as exc:
+        diagnostic = DiagnosticResult("DATAFRAME_READABLE", False, exception=exc)
+
+    print(diagnostic)
+    return diagnostic
 
 
 # TODO it would be nice to extend this check to see if the database is the correct one.

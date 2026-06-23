@@ -8,14 +8,11 @@ The v6-diagnostics algorithm verifies that a vantage6 node can run algorithm
 containers correctly. It is typically invoked via ``v6 test feature-test`` against
 a development network, not as part of a data-analysis session.
 
-For v5, data-extraction and compute steps are separate. A full feature test may
-run:
+For v5, data-extraction and compute steps are separate. A full feature test runs:
 
 1. **Data extraction** — ``read_csv`` to load a CSV into a session dataframe
-2. **Federated probe** — ``diagnose_dataframe_readable`` to verify the dataframe
-   is readable at a data station
-3. **Central diagnostics** — ``base_features`` to check environment, I/O, proxy,
-   subtasks, isolation, and session storage
+2. **Central diagnostics** — ``base_features`` to check environment, I/O, proxy,
+   subtasks, isolation, session storage, and session dataframe readability
 
 Functions
 ---------
@@ -23,7 +20,9 @@ Functions
 ``base_features``
 ^^^^^^^^^^^^^^^^^
 
-Central diagnostics for container infrastructure. No arguments or databases.
+Central diagnostics for container infrastructure. When session dataframes are
+attached to the task, ``base_features`` also verifies they can be read from the
+session folder.
 
 ``diagnose_local_proxy_subtask_stop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
