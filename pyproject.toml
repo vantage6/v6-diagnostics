@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "v6-diagnostics"
+version = "1.0.0"
+description = "vantage6 node diagnostic tools"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "pandas",
+  "vantage6-algorithm-tools>=5.0.1",
+  "requests",
+  "pyjwt",
+]
+license = { text = "Apache License 2.0" }
+keywords = ["vantage6", "algorithm", "diagnostics"]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/vantage6/v6-diagnostics"
+Repository = "https://github.com/vantage6/v6-diagnostics"
+Issues = "https://github.com/vantage6/v6-diagnostics/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["v6_diagnostics"]
+
+[tool.pytest.ini_options]
+python_files = ["test.py", "test_*.py"]
+testpaths = ["test"]
+
+[dependency-groups]
+dev = [
+  "pytest",
+]
