@@ -49,7 +49,6 @@ from requests.exceptions import ConnectionError
 
 from vantage6.algorithm.client import AlgorithmClient
 from vantage6.algorithm.decorator.action import federated
-from vantage6.algorithm.decorator.data import dataframe
 from vantage6.algorithm.tools.util import get_env_var
 
 from v6_diagnostics.util import DiagnosticResult, header
@@ -194,8 +193,6 @@ def diagnose_session_folder() -> DiagnosticResult:
     return diagnostic
 
 
-@federated
-@dataframe(1)
 def diagnose_dataframe_readable(df: pd.DataFrame) -> dict:
     """Verify that a session dataframe is readable at a data station."""
     return DiagnosticResult("DATAFRAME_READABLE", True, df.shape)
