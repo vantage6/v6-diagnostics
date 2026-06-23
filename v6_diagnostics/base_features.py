@@ -40,16 +40,19 @@ does not use any wrapper functions. The following features are tested:
 #       child algorithm container.
 # TODO: child container should trigger different function
 import os
-import requests
+from pathlib import Path
+
 import jwt
-
-
+import pandas as pd
+import requests
 from requests.exceptions import ConnectionError
+
 from vantage6.algorithm.client import AlgorithmClient
 from vantage6.algorithm.decorator.action import federated
+from vantage6.algorithm.decorator.data import dataframe
+from vantage6.algorithm.tools.util import get_env_var
 
 from v6_diagnostics.util import DiagnosticResult, header
-from vantage6.algorithm.tools.util import get_env_var
 
 
 def diagnose_environment() -> DiagnosticResult:
@@ -173,6 +176,31 @@ def diagnose_isolation() -> DiagnosticResult:
     return diagnostic
 
 
+def diagnose_session_folder() -> DiagnosticResult:
+    """Diagnose that the session folder is writable."""
+    header("Diagnose the session folder")
+    test_word = "test"
+    try:
+        session_folder = Path(get_env_var("SESSION_FOLDER"))
+        session_folder.mkdir(parents=True, exist_ok=True)
+        test_file = session_folder / "v6_diagnostics_test.txt"
+        test_file.write_text(test_word, encoding="utf-8")
+        success = test_file.read_text(encoding="utf-8") == test_word
+        diagnostic = DiagnosticResult("SESSION_FOLDER", success)
+    except Exception as exc:
+        diagnostic = DiagnosticResult("SESSION_FOLDER", False, exception=exc)
+
+    print(diagnostic)
+    return diagnostic
+
+
+@federated
+@dataframe(1)
+def diagnose_dataframe_readable(df: pd.DataFrame) -> dict:
+    """Verify that a session dataframe is readable at a data station."""
+    return DiagnosticResult("DATAFRAME_READABLE", True, df.shape)
+
+
 # TODO it would be nice to extend this check to see if the database is the correct one.
 # That is probably best/easiest when we have specific checks for a federated step.
 def diagnose_database() -> DiagnosticResult:
@@ -186,37 +214,3 @@ def diagnose_database() -> DiagnosticResult:
 
     print(diagnostic)
     return diagnostic
-
-
-# TODO we might reintroduce this check in v5 but it can only be done in a data
-# extraction step in v5 - so then we need to have separate checks for that step.
-# def diagnose_database() -> list[DiagnosticResult]:
-#     """Diagnose the file-based database."""
-#     header("Diagnose the file-based database")
-#     diagnostics = []
-#     try:
-#         db_labels = get_env_var("DATABASE_LABELS").split(",")
-#         for label in db_labels:
-#             db_uri = get_env_var(f"DATABASE_{label.upper()}_URI")
-#             db_type = get_env_var(f"DATABASE_{label.upper()}_TYPE")
-
-#             if db_type in ["sql", "omop", "sparql", "other"]:
-#                 # We do not expect these databases to be files, so don't
-#                 # perform checks on them
-#                 continue
-#             elif Path(db_uri).exists():
-#                 diagnostic = DiagnosticResult(f"DATABASE {label.upper()}", True)
-#             else:
-#                 diagnostic = DiagnosticResult(
-#                     f"DATABASE {label.upper()}",
-#                     False,
-#                     payload=f"{db_uri} does not exist",
-#                 )
-#             diagnostics.append(diagnostic)
-#     except Exception as exc:
-#         diagnostic = DiagnosticResult("DATABASE", False, exception=exc)
-#         diagnostics.append(diagnostic)
-
-#     for diagnostic in diagnostics:
-#         print(diagnostic)
-#     return diagnostics

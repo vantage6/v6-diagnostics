@@ -8,46 +8,40 @@
 --------------------
 
 # v6-diagnostics
+
 This algorithm is part of the [vantage6](https://vantage6.ai) solution. This repository contains diagnostic tools for debugging and testing the vantage6 infrastructure on a high level.
 
-## Usage
-### Install
-```bash
-git clone https://github.com/vantage6/v6-diagnostics.git
-cd v6-diagnostic
-pip install .
-```
+## Running the algorithm
 
-### Execute
-
-Follow instructions in the CLI:
+The diagnostics are typically run via the vantage6 CLI against a development network:
 
 ```bash
-v6 test --help
+v6 test feature-test
 ```
 
-See the [vantage6 documentation](https://docs.vantage6.ai/) for more information on how
-to use the CLI.
+A full feature test may run a **data extraction** step (`read_csv`), the **central** `base_features` function. See [usage.rst](docs/v6-diagnostics/usage.rst) for details.
 
 The ``v6 test integration-test`` command and ``v6 test feature-test`` command will run this algorithm.
 
-### Docker image
+## Build
+
 ```bash
-# build the docker image
 make image
+```
 
-# push the docker image to the registry
-make push
+## Install (development)
 
-# build and push the docker image
-make publish
+```bash
+git clone https://github.com/vantage6/v6-diagnostics.git
+cd v6-diagnostics
+uv sync --group dev
 ```
 
 ## LICENCE
+
 Apache License 2.0
 
-## Read more
-See the [documentation](https://docs.vantage6.ai/) for detailed instructions on how to install and use the server and nodes.
+See the [vantage6 documentation](https://docs.vantage6.ai/) for detailed instructions on how to install and use the server and nodes.
 
 ------------------------------------
 > [vantage6](https://vantage6.ai)

@@ -16,7 +16,9 @@ from v6_diagnostics.base_features import (  # noqa: F401
     # child task runs this, so we need to keep the import here
     diagnose_local_proxy_subtask_stop,
     diagnose_isolation,
+    diagnose_session_folder,
     diagnose_database,
+    diagnose_dataframe_readable,
 )
 
 
@@ -45,6 +47,8 @@ def base_features(client: AlgorithmClient) -> list[DiagnosticResult]:
         diagnose_local_proxy().json,
         diagnose_local_proxy_subtask(client).json,
         diagnose_isolation().json,
+        diagnose_session_folder().json,
+        diagnose_dataframe_readable().json,
         diagnose_database().json,
     ]
 

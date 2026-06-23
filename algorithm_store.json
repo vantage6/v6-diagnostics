@@ -1,0 +1,46 @@
+{
+  "name": "v6-diagnostics",
+  "description": "Diagnostic tools for debugging and testing the vantage6 infrastructure",
+  "code_url": "https://github.com/vantage6/v6-diagnostics",
+  "documentation_url": "",
+  "image": "ghcr.io/vantage6/algorithm/diagnostic",
+  "vantage6_version": "5.0.0",
+  "partitioning": "horizontal",
+  "functions": [
+    {
+      "name": "base_features",
+      "display_name": "Base feature diagnostics",
+      "standalone": true,
+      "description": "Run infrastructure diagnostics for environment, I/O, proxy, subtasks, isolation, and session storage.",
+      "step_type": "central_compute",
+      "ui_visualizations": [],
+      "arguments": [],
+      "databases": []
+    },
+    {
+      "name": "diagnose_local_proxy_subtask_stop",
+      "display_name": "Subtask stop probe",
+      "standalone": true,
+      "description": "Federated subtask used by the base feature diagnostics to verify subtask creation.",
+      "step_type": "federated_compute",
+      "ui_visualizations": [],
+      "arguments": [],
+      "databases": []
+    },
+    {
+      "name": "read_csv",
+      "display_name": "Read CSV file",
+      "standalone": true,
+      "description": "Extract data from a CSV file into a session dataframe.",
+      "step_type": "data_extraction",
+      "ui_visualizations": [],
+      "arguments": [],
+      "databases": [
+        {
+          "name": "Database to read from",
+          "description": "CSV file to extract into a session dataframe"
+        }
+      ]
+    }
+  ]
+}

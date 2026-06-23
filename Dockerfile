@@ -1,13 +1,13 @@
-FROM harbor2.vantage6.ai/infrastructure/algorithm-base:5.0
+ARG BASE=5.0
+FROM ghcr.io/vantage6/infrastructure/algorithm-base:${BASE}
 
-# This is a placeholder that should be overloaded by invoking
-# docker build with '--build-arg PKG_NAME=...'
 ARG PKG_NAME="v6_diagnostics"
-ENV PKG_NAME=${PKG_NAME}
 
 # install federated algorithm
 COPY . /app
-RUN pip install /app
+RUN uv pip install --system -e /app
+
+ENV PKG_NAME=${PKG_NAME}
 
 # Tell docker to execute `wrap_algorithm()` when the image is run. This function
 # will ensure that the algorithm method is called properly.
