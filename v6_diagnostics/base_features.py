@@ -162,7 +162,7 @@ def diagnose_local_proxy_subtask_stop(*_args, **_kwargs) -> bool:
 def diagnose_isolation() -> DiagnosticResult:
     header("Diagnose the isolation of the algorithm container")
     try:
-        requests.get("https://google.nl")
+        requests.get("https://google.com")
     except ConnectionError:
         diagnostic = DiagnosticResult("ISOLATION", True)
         print(diagnostic)
